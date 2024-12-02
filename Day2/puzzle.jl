@@ -32,27 +32,48 @@ function solve(input::String)
     return (solve_part1(reports), solve_part2(reports))
 end
 
+function is_safe_report(report::Vector{Int})
+    sign = (report[2] - report[1]) > 0 ? 1 : -1
+    prev = report[1]
+    is_safe = true
+    for num in (@view report[2:end])
+        diff = num - prev
+        if diff * sign <= 0 || abs(diff) > 3
+            is_safe = false
+            break
+        end
+        prev = num
+    end
+    return is_safe
+end
+
 function solve_part1(reports::Vector{Vector{Int}})
     safe_count = 0
     for report in reports
-        sign = (report[2] - report[1]) > 0 ? 1 : -1
-        prev = report[1]
-        is_safe = true
-        for num in (@view report[2:end])
-            diff = num - prev
-            if diff * sign <= 0 || abs(diff) > 3
-                is_safe = false
-                break
-            end
-            prev = num
-        end
-        safe_count += is_safe ? 1 : 0
+        is_safe = is_safe_report(report)
+        is_safe && (safe_count += 1)
     end
     return safe_count
 end
 
 function solve_part2(reports::Vector{Vector{Int}})
-    return nothing
+    safe_count = 0
+    for report in reports
+        if is_safe_report(report)
+            safe_count += 1
+            continue
+        end
+        # Part 2: tolerance
+        len = length(report)
+        for i in 1:len
+            alternative = vcat(report[1:i-1], report[i+1:len])
+            if is_safe_report(alternative)
+                safe_count += 1
+                break
+            end
+        end
+    end
+    return safe_count
 end
 
 end
