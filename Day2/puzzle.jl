@@ -19,19 +19,39 @@ end
 
 function prepare_input(input::String)
     lines = filter(line -> !isempty(lstrip(line)), split(input, "\n"))
-    return lines
+    reports = Vector{Vector{Int}}(undef, length(lines))
+    for (i, line) in enumerate(lines)
+        parts = split(line; keepempty=false)
+        reports[i] = map(part -> parse(Int, part), parts)
+    end
+    return reports
 end
 
 function solve(input::String)
-    lines = prepare_input(input)
-    return (solve_part1(lines), solve_part2(lines))
+    reports = prepare_input(input)
+    return (solve_part1(reports), solve_part2(reports))
 end
 
-function solve_part1(lines::Vector{String})
-    return nothing
+function solve_part1(reports::Vector{Vector{Int}})
+    safe_count = 0
+    for report in reports
+        sign = (report[2] - report[1]) > 0 ? 1 : -1
+        prev = report[1]
+        is_safe = true
+        for num in (@view report[2:end])
+            diff = num - prev
+            if diff * sign <= 0 || abs(diff) > 3
+                is_safe = false
+                break
+            end
+            prev = num
+        end
+        safe_count += is_safe ? 1 : 0
+    end
+    return safe_count
 end
 
-function solve_part2(lines::Vector{String})
+function solve_part2(reports::Vector{Vector{Int}})
     return nothing
 end
 
