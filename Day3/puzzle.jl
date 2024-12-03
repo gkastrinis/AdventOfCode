@@ -12,6 +12,13 @@ xmul(2,4)%&mul[3,7]!@^do_not_mul(5,5)+mul(32,64]then(mul(11,8)mul(8,5))
     return solve(input)
 end
 
+function run_example2()
+    input = """
+xmul(2,4)&mul[3,7]!^don't()_mul(5,5)+mul(32,64](mul(11,8)undo()?mul(8,5))
+"""
+    return solve(input)
+end
+
 function solve(input::String)
     return (solve_part1(input), solve_part2(input))
 end
@@ -57,8 +64,24 @@ function parse_possitive_int_until(input::String, i::Int, until::Char)
     return (nextind(input, i), V)
 end
 
+# 90669332
 function solve_part2(input::String)
-    return nothing
+    score = 0
+    enabled = 1
+    for i in firstindex(input):lastindex(input)
+        if startswith((@view input[i:end]), "do()")
+            enabled = 1
+            i = nextind(input, i, 4)
+        elseif startswith((@view input[i:end]), "don't()")
+            enabled = 0
+            i = nextind(input, i, 6)
+        else
+            i, val = parse_mul(input, i)
+            score += val * enabled
+            i = nextind(input, i)
+        end
+    end
+    return score
 end
 
 end
