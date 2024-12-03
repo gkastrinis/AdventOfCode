@@ -1,6 +1,5 @@
 module AoC_24_Day3
 
-# 173419328
 function run_actual(path::String)
     input = read(path, String)
     return solve(input)
@@ -26,6 +25,7 @@ function solve_part1_alt(input::String)
     return score
 end
 
+# 173419328
 function solve_part1(input::String)
     score = 0
     for i in firstindex(input):lastindex(input)
