@@ -5,7 +5,7 @@ function run_actual(path::String)
     return solve(input)
 end
 
-function run_example1()
+function run_example()
     input = """
 7 6 4 2 1
 1 2 7 8 9
