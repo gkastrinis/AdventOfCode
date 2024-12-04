@@ -25,19 +25,21 @@ function prepare_input(input::String)
     rows = count(==('\n'), input)
     columns = findnext('\n', input, 1) - 1
     input1D = replace(input, '\n' => "")
-    return (input1D, rows, columns)
+    len = length(input1D)
+    return (input1D, rows, columns, len)
 end
 
 function solve(input::String)
-    input1D, rows, columns = prepare_input(input)
-    return (part1(input1D, rows, columns), part2(input1D, rows, columns))
+    input1D, rows, columns, len = prepare_input(input)
+    printstyled("Part 1: ", part1(input1D, rows, columns, len), "\n"; color=:yellow)
+    printstyled("Part 2: ", part2(input1D, rows, columns, len), "\n"; color=:blue)
+    return nothing
 end
 
 is_mas(input, i1, i2, i3) = (input[i1] == 'M' && input[i2] == 'A' && input[i3] == 'S')
 
 # 2493
-function part1(input1D::String, rows::Int, columns::Int)
-    len = length(input1D)
+function part1(input1D::String, rows::Int, columns::Int, len::Int)
     score = 0
     xs = findall(==('X'), input1D)
     for x in xs
@@ -79,7 +81,7 @@ function part1(input1D::String, rows::Int, columns::Int)
     return score
 end
 
-function part2(input1D::String, rows::Int, columns::Int)
+function part2(input1D::String, rows::Int, columns::Int, len::Int)
     return nothing
 end
 
