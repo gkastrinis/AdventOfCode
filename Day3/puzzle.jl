@@ -1,9 +1,6 @@
 module AoC_24_Day3
 
-function run_actual(path::String)
-    input = read(path, String)
-    return solve(input)
-end
+run_actual(path::String) = solve(read(path, String))
 
 function run_example()
     input = """
