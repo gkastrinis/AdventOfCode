@@ -36,7 +36,7 @@ function solve(input::String)
     return nothing
 end
 
-is_mas(input, i1, i2, i3) = (input[i1] == 'M' && input[i2] == 'A' && input[i3] == 'S')
+is_mas(str, i1, i2, i3) = (str[i1] == 'M' && str[i2] == 'A' && str[i3] == 'S')
 
 # 2493
 function part1(input1D::String, rows::Int, columns::Int, len::Int)
@@ -61,19 +61,19 @@ function part1(input1D::String, rows::Int, columns::Int, len::Int)
         if curr_row >= 4 && is_mas(input1D, x-columns, x-2*columns, x-3*columns)
             score += 1
         end
-        # Diagonal 1 ↘
+        # Diagonal ↘
         if curr_row + 3 <= rows && curr_col + 3 <= columns && is_mas(input1D, x+columns+1, x+2*columns+2, x+3*columns+3)
             score += 1
         end
-        # Diagonal 2 ↖
+        # Diagonal ↖
         if curr_row >= 4 && curr_col >= 4 && is_mas(input1D, x-columns-1, x-2*columns-2, x-3*columns-3)
             score += 1
         end
-        # Diagonal 3 ↙
+        # Diagonal ↙
         if curr_row + 3 <= rows && curr_col >= 4 && is_mas(input1D, x+columns-1, x+2*columns-2, x+3*columns-3)
             score += 1
         end
-        # Diagonal 4 ↗
+        # Diagonal ↗
         if curr_row >= 4 && curr_col + 3 <= columns && is_mas(input1D, x-columns+1, x-2*columns+2, x-3*columns+3)
             score += 1
         end
@@ -81,8 +81,23 @@ function part1(input1D::String, rows::Int, columns::Int, len::Int)
     return score
 end
 
+is_ms_unordered(str, i1, i2) = (str[i1] == 'M' && str[i2] == 'S') || (str[i1] == 'S' && str[i2] == 'M')
+
+# 1890
 function part2(input1D::String, rows::Int, columns::Int, len::Int)
-    return nothing
+    score = 0
+    xs = findall(==('A'), input1D)
+    for x in xs
+        curr_row = (x - 1) ÷ columns + 1
+        curr_col = (x - 1) % columns + 1
+        (curr_row >= 2 && curr_row + 1 <= rows && curr_col >= 2 && curr_col + 1 <= columns) || continue
+        # Diagonals ↘ | ↖
+        diag1 = is_ms_unordered(input1D, x-columns-1, x+columns+1)
+        # Diagonals ↙ | ↗
+        diag2 = is_ms_unordered(input1D, x+columns-1, x-columns+1)
+        diag1 && diag2 && (score += 1)
+    end
+    return score
 end
 
 end
