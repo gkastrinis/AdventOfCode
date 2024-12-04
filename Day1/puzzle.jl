@@ -33,11 +33,11 @@ end
 
 function solve(input::String)
     list1, list2 = prepare_input(input)
-    return (solve_part1(list1, list2), solve_part2(list1, list2))
+    return (part1(list1, list2), part2(list1, list2))
 end
 
 # 1651298
-function solve_part1(list1::Vector{Int}, list2::Vector{Int})
+function part1(list1::Vector{Int}, list2::Vector{Int})
     diffs = Vector{Int}(undef, length(list1))
     for i in 1:length(list1)
         diffs[i] = abs(list1[i] - list2[i])
@@ -46,7 +46,7 @@ function solve_part1(list1::Vector{Int}, list2::Vector{Int})
 end
 
 # 21306195
-function solve_part2(list1::Vector{Int}, list2::Vector{Int})
+function part2(list1::Vector{Int}, list2::Vector{Int})
     score = 0
     for num in list1
         score += num * count(==(num), list2)

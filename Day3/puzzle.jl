@@ -20,10 +20,10 @@ xmul(2,4)&mul[3,7]!^don't()_mul(5,5)+mul(32,64](mul(11,8)undo()?mul(8,5))
 end
 
 function solve(input::String)
-    return (solve_part1(input), solve_part2(input))
+    return (part1(input), part2(input))
 end
 
-function solve_part1_alt(input::String)
+function part1_alt(input::String)
     score = 0
     regex = r"mul\(([0-9]+),([0-9]+)\)"
     for m in eachmatch(regex, input)
@@ -33,7 +33,7 @@ function solve_part1_alt(input::String)
 end
 
 # 173419328
-function solve_part1(input::String)
+function part1(input::String)
     score = 0
     for i in firstindex(input):lastindex(input)
         i, val = parse_mul(input, i)
@@ -65,7 +65,7 @@ function parse_possitive_int_until(input::String, i::Int, until::Char)
 end
 
 # 90669332
-function solve_part2(input::String)
+function part2(input::String)
     score = 0
     enabled = 1
     for i in firstindex(input):lastindex(input)

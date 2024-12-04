@@ -29,7 +29,7 @@ end
 
 function solve(input::String)
     reports = prepare_input(input)
-    return (solve_part1(reports), solve_part2(reports))
+    return (part1(reports), part2(reports))
 end
 
 function is_safe_report(report::Vector{Int})
@@ -48,7 +48,7 @@ function is_safe_report(report::Vector{Int})
 end
 
 # 463
-function solve_part1(reports::Vector{Vector{Int}})
+function part1(reports::Vector{Vector{Int}})
     safe_count = 0
     for report in reports
         is_safe = is_safe_report(report)
@@ -58,7 +58,7 @@ function solve_part1(reports::Vector{Vector{Int}})
 end
 
 # 514
-function solve_part2(reports::Vector{Vector{Int}})
+function part2(reports::Vector{Vector{Int}})
     safe_count = 0
     for report in reports
         if is_safe_report(report)
