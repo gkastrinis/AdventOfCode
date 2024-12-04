@@ -20,7 +20,9 @@ xmul(2,4)&mul[3,7]!^don't()_mul(5,5)+mul(32,64](mul(11,8)undo()?mul(8,5))
 end
 
 function solve(input::String)
-    return (part1(input), part2(input))
+    printstyled("Part 1: ", part1(input), "\n"; color=:yellow)
+    printstyled("Part 2: ", part2(input), "\n"; color=:blue)
+    return nothing
 end
 
 function part1_alt(input::String)

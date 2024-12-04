@@ -33,7 +33,9 @@ end
 
 function solve(input::String)
     list1, list2 = prepare_input(input)
-    return (part1(list1, list2), part2(list1, list2))
+    printstyled("Part 1: ", part1(list1, list2), "\n"; color=:yellow)
+    printstyled("Part 2: ", part2(list1, list2), "\n"; color=:blue)
+    return nothing
 end
 
 # 1651298

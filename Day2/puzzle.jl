@@ -29,7 +29,9 @@ end
 
 function solve(input::String)
     reports = prepare_input(input)
-    return (part1(reports), part2(reports))
+    printstyled("Part 1: ", part1(reports), "\n"; color=:yellow)
+    printstyled("Part 2: ", part2(reports), "\n"; color=:blue)
+    return nothing
 end
 
 function is_safe_report(report::Vector{Int})
