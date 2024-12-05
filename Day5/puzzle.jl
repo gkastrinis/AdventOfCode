@@ -4,7 +4,7 @@ run(path::String) = solve(read(path, String))
 
 Base.@kwdef struct Manual
     PagePrecedsPages::Dict{Int, Set{Int}} = Dict{Int, Set{Int}}()
-    Pages::Vector{Vector{Int}} = Vector{Vector{Int}}()
+    Updates::Vector{Vector{Int}} = Vector{Vector{Int}}()
 end
 
 function solve(input::String)
@@ -16,24 +16,24 @@ end
 
 # 4959
 function part1(manual::Manual)
-    return sum(middle_page(pages) for pages in manual.Pages if in_correct_order(manual, pages))
+    return sum(middle_page(update) for update in manual.Updates if in_correct_order(manual, update))
 end
 
 # 4655
 function part2(manual::Manual)
     score = 0
-    for pages in manual.Pages
-        page_len = length(pages)
+    for update in manual.Updates
+        pages_count = length(update)
         changed = false
-        for i in 1:page_len
-            for j in i+1:page_len
-                other = pages[j]
-                is_before(manual, pages[i], other) && continue
-                pages[i], pages[j] = pages[j], pages[i]
+        for i in 1:pages_count
+            for j in i+1:pages_count
+                other = update[j]
+                is_before(manual, update[i], other) && continue
+                update[i], update[j] = update[j], update[i]
                 changed = true
             end
         end
-        changed && (score += middle_page(pages))
+        changed && (score += middle_page(update))
     end
     return score
 end
@@ -55,7 +55,7 @@ function preprocess(input::String)
         line = readline(io)
         isempty(line) && break
         pages = split(line, ",")
-        push!(manual.Pages, parse.(Int, pages))
+        push!(manual.Updates, parse.(Int, pages))
     end
     return manual
 end
@@ -64,13 +64,13 @@ function is_before(manual::Manual, page::Int, other::Int)
     return haskey(manual.PagePrecedsPages, page) && other in manual.PagePrecedsPages[page]
 end
 
-function middle_page(pages::AbstractVector{Int})
-    return pages[length(pages)÷2 + 1]
+function middle_page(update::AbstractVector{Int})
+    return update[length(update)÷2 + 1]
 end
 
-function in_correct_order(manual::Manual, pages::AbstractVector{Int})
-    f((i, page)) = all(other -> is_before(manual, page, other), @view pages[i+1:end])
-    return all(f, enumerate(pages))
+function in_correct_order(manual::Manual, update::AbstractVector{Int})
+    f((i, page)) = all(other -> is_before(manual, page, other), @view update[i+1:end])
+    return all(f, enumerate(update))
 end
 
 end
