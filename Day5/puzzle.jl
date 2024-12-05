@@ -19,21 +19,17 @@ function part1(manual::Manual)
 end
 
 function part2(manual::Manual)
-    score = 0
-    for update in manual.Updates
-        pages_count = length(update)
-        changed = false
-        for i in 1:pages_count
-            for j in i+1:pages_count
-                other = update[j]
-                is_before(manual, update[i], other) && continue
-                update[i], update[j] = update[j], update[i]
-                changed = true
-            end
+    return sum(middle_page(fix!(update, manual)) for update in manual.Updates if !in_correct_order(manual, update))
+end
+
+function fix!(update::AbstractVector{Int}, manual::Manual)
+    for i in 1:length(update)
+        for j in i+1:length(update)
+            is_before(manual, update[i], update[j]) && continue
+            update[i], update[j] = update[j], update[i]
         end
-        changed && (score += middle_page(update))
     end
-    return score
+    return update
 end
 
 function preprocess(input::String)
