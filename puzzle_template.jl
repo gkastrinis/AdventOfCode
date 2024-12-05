@@ -2,10 +2,6 @@ module AoC_24_DayX
 
 run(path::String) = solve(read(path, String))
 
-function preprocess(input::String)
-    return nothing
-end
-
 function solve(input::String)
     x = preprocess(input)
     printstyled("Part 1: ", part1(x), "\n"; color=:yellow)
@@ -22,5 +18,13 @@ end
 function part2(x)
     return nothing
 end
+
+function preprocess(input::String)
+    return nothing
+end
+
+
+
+
 
 end
