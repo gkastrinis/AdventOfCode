@@ -45,15 +45,19 @@ function is_before_the_rest(manual::Manual, page::Int, rest::AbstractVector{Int}
     )
 end
 
+function in_correct_order(manual::Manual, update::AbstractVector{Int})
+    is_ok = true
+    for (i, page) in enumerate(update)
+        is_ok = is_ok && is_before_the_rest(manual, page, @view update[i+1:end])
+    end
+    return is_ok
+end
+
 # 4959
 function part1(manual::Manual)
     score = 0
     for update in manual.Updates
-        is_ok = true
-        for (i, page) in enumerate(update)
-            is_ok = is_ok && is_before_the_rest(manual, page, @view update[i+1:end])
-        end
-        is_ok && (score += update[length(update)÷2 + 1])
+        in_correct_order(manual, update) && (score += update[length(update)÷2 + 1])
     end
     return score
 end
