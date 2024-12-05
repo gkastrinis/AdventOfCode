@@ -38,17 +38,18 @@ function solve(input::String)
     return nothing
 end
 
-function is_before_the_rest(manual::Manual, page::Int, rest::AbstractVector{Int})
-    return all(
-        after -> haskey(manual.IsBefore, page) && after in manual.IsBefore[page],
-        rest
-    )
+
+
+function is_before_page(manual::Manual, page::Int, other::Int)
+    return haskey(manual.IsBefore, page) && other in manual.IsBefore[page]
 end
 
-function in_correct_order(manual::Manual, update::AbstractVector{Int})
+middle_page(pages::AbstractVector{Int}) = pages[length(pages)÷2 + 1]
+
+function in_correct_order(manual::Manual, pages::AbstractVector{Int})
     is_ok = true
-    for (i, page) in enumerate(update)
-        is_ok = is_ok && is_before_the_rest(manual, page, @view update[i+1:end])
+    for (i, page) in enumerate(pages)
+        is_ok &= all(other -> is_before_page(manual, page, other), @view pages[i+1:end])
     end
     return is_ok
 end
@@ -56,15 +57,29 @@ end
 # 4959
 function part1(manual::Manual)
     score = 0
-    for update in manual.Updates
-        in_correct_order(manual, update) && (score += update[length(update)÷2 + 1])
+    for pages in manual.Updates
+        in_correct_order(manual, pages) && (score += middle_page(pages))
     end
     return score
 end
 
-#
+# 4655
 function part2(manual::Manual)
-    return nothing
+    score = 0
+    for pages in manual.Updates
+        page_len = length(pages)
+        changed = false
+        for i in 1:page_len
+            for j in i+1:page_len
+                other = pages[j]
+                is_before_page(manual, pages[i], other) && continue
+                pages[i], pages[j] = pages[j], pages[i]
+                changed = true
+            end
+        end
+        changed && (score += middle_page(pages))
+    end
+    return score
 end
 
 end
