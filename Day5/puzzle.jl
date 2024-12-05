@@ -45,7 +45,6 @@ function middle_page(pages::AbstractVector{Int})
 end
 
 function in_correct_order(manual::Manual, pages::AbstractVector{Int})
-    # return all((i, page) -> all(other -> is_before(manual, page, other), @view pages[i+1:end]), enumerate(pages))
     f((i, page)) = all(other -> is_before(manual, page, other), @view pages[i+1:end])
     return all(f, enumerate(pages))
 end
