@@ -35,7 +35,6 @@ function solve(input::String)
     return nothing
 end
 
-# 1651298
 function part1(list1::Vector{Int}, list2::Vector{Int})
     diffs = Vector{Int}(undef, length(list1))
     for i in 1:length(list1)
@@ -44,7 +43,6 @@ function part1(list1::Vector{Int}, list2::Vector{Int})
     return sum(diffs)
 end
 
-# 21306195
 function part2(list1::Vector{Int}, list2::Vector{Int})
     score = 0
     for num in list1

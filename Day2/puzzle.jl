@@ -46,7 +46,6 @@ function is_safe_report(report::Vector{Int})
     return is_safe
 end
 
-# 463
 function part1(reports::Vector{Vector{Int}})
     safe_count = 0
     for report in reports
@@ -56,7 +55,6 @@ function part1(reports::Vector{Vector{Int}})
     return safe_count
 end
 
-# 514
 function part2(reports::Vector{Vector{Int}})
     safe_count = 0
     for report in reports

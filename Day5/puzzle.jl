@@ -14,12 +14,10 @@ function solve(input::String)
     return nothing
 end
 
-# 4959
 function part1(manual::Manual)
     return sum(middle_page(update) for update in manual.Updates if in_correct_order(manual, update))
 end
 
-# 4655
 function part2(manual::Manual)
     score = 0
     for update in manual.Updates

@@ -35,7 +35,6 @@ end
 
 is_mas(str, i1, i2, i3) = (str[i1] == 'M' && str[i2] == 'A' && str[i3] == 'S')
 
-# 2493
 function part1(input1D::String, rows::Int, columns::Int, len::Int)
     score = 0
     xs = findall(==('X'), input1D)
@@ -80,7 +79,6 @@ end
 
 is_ms_unordered(str, i1, i2) = (str[i1] == 'M' && str[i2] == 'S') || (str[i1] == 'S' && str[i2] == 'M')
 
-# 1890
 function part2(input1D::String, rows::Int, columns::Int, len::Int)
     score = 0
     xs = findall(==('A'), input1D)

@@ -9,12 +9,10 @@ function solve(input::String)
     return nothing
 end
 
-#
 function part1(x)
     return nothing
 end
 
-#
 function part2(x)
     return nothing
 end

@@ -31,7 +31,6 @@ function part1_alt(input::String)
     return score
 end
 
-# 173419328
 function part1(input::String)
     score = 0
     for i in firstindex(input):lastindex(input)
@@ -63,7 +62,6 @@ function parse_possitive_int_until(input::String, i::Int, until::Char)
     return (nextind(input, i), V)
 end
 
-# 90669332
 function part2(input::String)
     score = 0
     enabled = 1
