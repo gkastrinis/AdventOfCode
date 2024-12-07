@@ -1,76 +1,26 @@
 module AoC_24_Day6
 
-mutable struct Info
+struct Input
     rows::Int
     columns::Int
     matrix::Matrix{Char}
-    guard::Tuple{Int, Int} # (x, y)
-    moveVector::Tuple{Int, Int} # (dx, dy)
+    orig_cell::Tuple{Int, Int} # (x, y)
+    orig_direction::Tuple{Int, Int} # (dx, dy)
 end
 
 const N = (-1, 0)
 const E = (0, 1)
 const S = (1, 0)
 const W = (0, -1)
+const SYMBOL_TO_DIR = Dict('^' => N, 'v' => S, '>' => E, '<' => W)
+const RIGHT_TURN = Dict(N => E, E => S, S => W, W => N)
 
-run(path::String) = solve(read(path, String))
-
-function solve(input::String)
-    info = preprocess(input)
-    printstyled("Part 1: ", part1(info), "\n"; color=:yellow)
-    printstyled("Part 2: ", part2(info), "\n"; color=:blue)
-    return nothing
-end
-
-function part1(info::Info)
-    score = 1
-    while true
-        (new_tiles, went_out) = move_guard(info)
-        score += new_tiles
-        went_out && break
-        turn_guard(info)
-    end
-    return score
-end
-
-function part2(info::Info)
-    return nothing
-end
-
-function move_guard(info::Info)
-    new_tiles = 0
-    while true
-        x, y = add(info.guard, info.moveVector)
-        if x < 1 || x > info.columns || y < 1 || y > info.rows
-            return (new_tiles, true)
-        elseif info.matrix[x, y] == '#'
-            return (new_tiles, false)
-        elseif info.matrix[x, y] == 'X'
-            info.guard = (x, y)
-        elseif info.matrix[x, y] == '.'
-            info.guard = (x, y)
-            new_tiles += 1
-            info.matrix[x, y] = 'X'
-        end
-    end
-end
-
-function turn_guard(info::Info)
-    info.moveVector == N && (info.moveVector = E; return)
-    info.moveVector == E && (info.moveVector = S; return)
-    info.moveVector == S && (info.moveVector = W; return)
-    info.moveVector == W && (info.moveVector = N; return)
-    return nothing
-end
-
-add(p1, p2) = (p1[1] + p2[1], p1[2] + p2[2])
-
-function preprocess(input::String)
+function Input(input::String)
     rows = count(==('\n'), input)
     columns = findnext('\n', input, 1) - 1
     matrix = Matrix{Char}(undef, rows, columns)
     i = j = 1
-    guard = moveVector = (0, 0)
+    cell = direction = (0, 0)
     io = IOBuffer(input)
     while !eof(io)
         ch = read(io, Char)
@@ -79,19 +29,145 @@ function preprocess(input::String)
             j = 1
         else
             matrix[i, j] = ch
-            if ch in ('^', 'v', '>', '<')
-                guard = (i, j)
-                if     ch == '^' moveVector = N
-                elseif ch == 'v' moveVector = S
-                elseif ch == '>' moveVector = E
-                elseif ch == '<' moveVector = W
-                end
-                matrix[i, j] = 'X'
+            if ch in keys(SYMBOL_TO_DIR)
+                cell = (i, j)
+                direction = SYMBOL_TO_DIR[ch]
             end
             j += 1
         end
     end
-    return Info(rows, columns, matrix, guard, moveVector)
+    return Input(rows, columns, matrix, cell, direction)
+end
+
+function clone(input::Input)
+    return Input(
+        input.rows,
+        input.columns,
+        deepcopy(input.matrix),
+        input.orig_cell,
+        input.orig_direction
+    )
+end
+
+function in_bounds(input::Input, cell::Tuple{Int,Int})
+    x, y = cell
+    return 1 <= x <= input.rows && 1 <= y <= input.columns
+end
+
+function map_to_color(symbol::Char)
+    symbol == '.' && return :black
+    symbol == '#' && return :magenta
+    symbol in ('|', '-', '+') && return :yellow
+    symbol == 'O' && return :red
+    return :green
+end
+
+function pretty_print(m::Matrix{Char}, interactive::Bool=true)
+    interactive && (sleep(0.1); Base.run(`clear`))
+    println("\n")
+
+    for i in 1:size(m, 1)
+        for ch in m[i,:]
+            printstyled(ch, ' '; color=map_to_color(ch))
+        end
+        println('\n')
+    end
+    return nothing
+end
+
+solve_file(path::String) = solve(read(path, String))
+
+function solve(inputStr::String)
+    input = Input(inputStr)
+    input_clone = clone(input)
+    printstyled("Part 1: ", Part1.solve(input, false), "\n"; color=:yellow)
+    printstyled("Part 2: ", Part2.solve(input_clone, false), "\n"; color=:blue)
+    return nothing
+end
+
+############################################################################################
+
+module Part1
+    using ..AoC_24_Day6: Input, in_bounds, N, E, S, W, RIGHT_TURN, pretty_print
+
+    const DIR_TO_SYMBOL = Dict(N => '|', S => '|', E => '-', W => '-')
+
+    struct VisitedEntry
+        cell::Tuple{Int, Int}
+        direction::Tuple{Int, Int}
+    end
+
+    solve(input::Input, should_print::Bool) = walk(input, should_print)[1]
+
+    function walk(input::Input, should_print::Bool, new_obstacle::Union{Nothing,Tuple{Int,Int}}=nothing)
+        cell = input.orig_cell
+        direction = input.orig_direction
+        input.matrix[cell...] = DIR_TO_SYMBOL[direction]
+        score = 1
+        path = Set{Tuple{Int, Int}}()
+        visited = Set{VisitedEntry}()
+        push!(visited, VisitedEntry(input.orig_cell, input.orig_direction))
+        while true
+            should_print && pretty_print(input.matrix)
+
+            next_cell = cell .+ direction
+            # Went out of the grid
+            !in_bounds(input, next_cell) && return (score, path)
+            # Hit an obstacle
+            if input.matrix[next_cell...] == '#' || (!isnothing(new_obstacle) && next_cell == new_obstacle)
+                input.matrix[cell...] = '+'
+                direction = RIGHT_TURN[direction]
+                continue
+            elseif input.matrix[next_cell...] == '.'
+                score += 1
+                push!(path, next_cell)
+                input.matrix[next_cell...] = DIR_TO_SYMBOL[direction]
+            elseif input.matrix[next_cell...] in ('|', '-')
+                input.matrix[next_cell...] = '+'
+            end
+            cell = next_cell
+            # Check for a loop
+            ve = VisitedEntry(next_cell, direction)
+            ve in visited && return (-1, path)
+            # Cache the visited cell
+            in_bounds(input, next_cell) && push!(visited, ve)
+        end
+    end
+end
+
+############################################################################################
+
+module Part2
+    using ..AoC_24_Day6: Input, clone, pretty_print
+    using ..Part1: walk
+
+    function solve(input::Input, should_print::Bool)
+        score = 0
+        # Get the visited path from part 1
+        # Clone the input (perhaps another time) to avoid contaminating the print below.
+        # If we don't print the obstacles, the cloning can be avoided.
+        input_clone = should_print ? clone(input) : input
+        loop_score, path = walk(input, false)
+        if loop_score == -1
+            printstyled("Already in loop!\n"; color=:red)
+            return score
+        end
+        alt_obstacles = Set{Tuple{Int, Int}}()
+        # Attempt to introduce a new obstacle in each cell in the path
+        for new_obstacle in path
+            if walk(input, false, new_obstacle)[1] == -1
+                score += 1
+                push!(alt_obstacles, new_obstacle)
+            end
+        end
+        if should_print
+            for obstacle in alt_obstacles
+                input_clone.matrix[obstacle...] = 'O'
+            end
+            pretty_print(input_clone.matrix, false)
+        end
+        return score
+    end
 end
 
 end
