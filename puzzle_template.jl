@@ -1,28 +1,44 @@
 module AoC_24_DayX
 
-run(path::String) = solve(read(path, String))
+struct Input
+end
 
-function solve(input::String)
-    x = preprocess(input)
-    printstyled("Part 1: ", part1(x), "\n"; color=:yellow)
-    printstyled("Part 2: ", part2(x), "\n"; color=:blue)
+function Input(input::String)
+    return Input()
+end
+
+function clone(input::Input)
+    return Input()
+end
+
+solve_file(path::String) = solve(read(path, String))
+
+function solve(inputStr::String)
+    input = Input(inputStr)
+    input_clone = clone(input)
+    printstyled("Part 1: ", Part1.solve(input), "\n"; color=:yellow)
+    printstyled("Part 2: ", Part2.solve(input_clone), "\n"; color=:blue)
     return nothing
 end
 
-function part1(x)
-    return nothing
+############################################################################################
+
+module Part1
+    using ..AoC_24_DayX: Input
+
+    function solve(input::Input)
+        return nothing
+    end
 end
 
-function part2(x)
-    return nothing
+############################################################################################
+
+module Part2
+    using ..AoC_24_DayX: Input
+
+    function solve(input::Input)
+        return nothing
+    end
 end
-
-function preprocess(input::String)
-    return nothing
-end
-
-
-
-
 
 end
