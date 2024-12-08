@@ -4,7 +4,9 @@ struct Input
     rows::Int
     columns::Int
     matrix::Matrix{Int8}
+    # From frequency to antenna coordinates
     antennas::Dict{Int8,Vector{Tuple{Int, Int}}}
+    # Coordinates of the antinodes
     antinodes::Set{Tuple{Int, Int}}
 end
 
@@ -24,6 +26,8 @@ function Input(input::String)
             j = 1
             continue
         else
+            # Map each frequency to an int. This is mostly for printing purposes.
+            # Nodes containing an antenna and an antinode will be the negative of the frequency.
             freq = Int8(ch)
             matrix[i, j] = freq
             if freq != EMPTY_FREQ
@@ -55,6 +59,7 @@ function is_in_bounds(input::Input, cell::Tuple{Int,Int})
     return 1 <= row <= input.rows && 1 <= col <= input.columns
 end
 
+# Manhattan distance between two antennas.
 function transpose_vector(antenna1::Tuple{Int, Int}, antenna2::Tuple{Int, Int})
     row1, col1 = antenna1
     row2, col2 = antenna2
@@ -92,7 +97,7 @@ end
 ############################################################################################
 
 module Part1
-    using ..AoC_24_Day8: Input, EMPTY_FREQ, is_in_bounds, transpose_vector, add_antinode!, pretty_print
+    using ..AoC_24_Day8: Input, is_in_bounds, transpose_vector, add_antinode!, pretty_print
 
     function solve(input::Input)
         for (freq, antennas) in input.antennas
@@ -103,6 +108,7 @@ module Part1
                     a1 = antennas[i]
                     a2 = antennas[j]
                     tp_vec = transpose_vector(a1, a2)
+                    # Try (a1 - 1*tp) and (a1 + 2*tp)
                     for tp in (-1 .* tp_vec, tp_vec .+ tp_vec)
                         antinode = a1 .+ tp
                         !is_in_bounds(input, antinode) && continue
@@ -119,7 +125,7 @@ end
 ############################################################################################
 
 module Part2
-    using ..AoC_24_Day8: Input, EMPTY_FREQ, is_in_bounds, transpose_vector, add_antinode!, pretty_print
+    using ..AoC_24_Day8: Input, is_in_bounds, transpose_vector, add_antinode!, pretty_print
 
     function solve(input::Input)
         for (freq, antennas) in input.antennas
@@ -131,6 +137,7 @@ module Part2
                     a2 = antennas[j]
                     tp_vec = transpose_vector(a1, a2)
                     push!(input.antinodes, a1)
+                    # Try (a1 - N*tp) and (a1 + N*tp)
                     for tp in (-1 .* tp_vec, tp_vec)
                         current = a1
                         while true
@@ -143,7 +150,7 @@ module Part2
                 end
             end
         end
-        pretty_print(input.matrix)
+        # pretty_print(input.matrix)
         return length(input.antinodes)
     end
 end
