@@ -5,6 +5,7 @@ struct Input
     columns::Int
     matrix::Matrix{Int8}
     antennas::Dict{Int8,Vector{Tuple{Int, Int}}}
+    antinodes::Set{Tuple{Int, Int}}
 end
 
 const EMPTY_FREQ = Int8('.')
@@ -32,32 +33,7 @@ function Input(input::String)
         end
         j += 1
     end
-    return Input(rows, columns, matrix, antennas)
-end
-
-# function clone(input::Input)
-#     return Input()
-# end
-
-function in_bounds(input::Input, cell::Tuple{Int,Int})
-    row, col = cell
-    return 1 <= row <= input.rows && 1 <= col <= input.columns
-end
-
-function map_to_color(e::Int8)
-    e == EMPTY_FREQ && return :grey
-    e < 0 && return :red
-    return :green
-end
-
-function pretty_print(m::Matrix{Int8})
-    for i in 1:size(m, 1)
-        for e in m[i,:]
-            printstyled(' ', Char(abs(e)), ' '; color=map_to_color(e))
-        end
-        println('\n')
-    end
-    return nothing
+    return Input(rows, columns, matrix, antennas, Set{Tuple{Int, Int}}())
 end
 
 function solve_file(path::String)
@@ -66,64 +42,109 @@ end
 
 function solve_data(data::String)
     input = Input(data)
-    # input_clone = clone(input)
-    printstyled("Part 1: ", Part1.solve(input), "\n"; color=:yellow)
-    # printstyled("Part 2: ", Part2.solve(input_clone), "\n"; color=:blue)
+    input_clone = deepcopy(input)
+    printstyled("Part 1: ", Part1.solve(input), "\n"; color=:blue)
+    printstyled("Part 2: ", Part2.solve(input_clone), "\n"; color=:yellow)
+    return nothing
+end
+
+############################################################################################
+
+function is_in_bounds(input::Input, cell::Tuple{Int,Int})
+    row, col = cell
+    return 1 <= row <= input.rows && 1 <= col <= input.columns
+end
+
+function transpose_vector(antenna1::Tuple{Int, Int}, antenna2::Tuple{Int, Int})
+    row1, col1 = antenna1
+    row2, col2 = antenna2
+    return (row2-row1, col2-col1)
+end
+
+function add_antinode!(input::Input, antinode::Tuple{Int, Int}, freq::Int8)
+    push!(input.antinodes, antinode)
+    prev_val = input.matrix[antinode...]
+    if prev_val == EMPTY_FREQ
+        input.matrix[antinode...] = -freq
+    elseif prev_val > 0
+        input.matrix[antinode...] = -prev_val
+    end
+    return nothing
+end
+
+function pretty_print(m::Matrix{Int8})
+    for i in 1:size(m, 1)
+        for e in m[i,:]
+            color = if e == EMPTY_FREQ
+                :black
+            elseif e < 0
+                :red
+            else
+                :green
+            end
+            printstyled(' ', Char(abs(e)), ' '; color)
+        end
+        println('\n')
+    end
     return nothing
 end
 
 ############################################################################################
 
 module Part1
-    using ..AoC_24_Day8: Input, EMPTY_FREQ, in_bounds, pretty_print
+    using ..AoC_24_Day8: Input, EMPTY_FREQ, is_in_bounds, transpose_vector, add_antinode!, pretty_print
 
     function solve(input::Input)
-        antinodes = Set{Tuple{Int, Int}}()
         for (freq, antennas) in input.antennas
-            length(antennas) < 2 && continue
-            for i in 1:length(antennas)-1
-                for j in i+1:length(antennas)
+            len = length(antennas)
+            len < 2 && continue
+            for i in 1:len-1
+                for j in i+1:len
                     a1 = antennas[i]
                     a2 = antennas[j]
                     tp_vec = transpose_vector(a1, a2)
-                    for node in (a1 .- tp_vec, a2 .+ tp_vec)
-                        if is_valid_antinode(input, freq, node)
-                            push!(antinodes, node)
-                            prev_val = input.matrix[node...]
-                            if prev_val == EMPTY_FREQ
-                                input.matrix[node...] = -freq
-                            elseif prev_val > 0
-                                input.matrix[node...] = -prev_val
-                            end
-                        end
+                    for tp in (-1 .* tp_vec, tp_vec .+ tp_vec)
+                        antinode = a1 .+ tp
+                        !is_in_bounds(input, antinode) && continue
+                        add_antinode!(input, antinode, freq)
                     end
                 end
             end
         end
         # pretty_print(input.matrix)
-        return length(antinodes)
-    end
-
-    function transpose_vector(antenna1::Tuple{Int, Int}, antenna2::Tuple{Int, Int})
-        row1, col1 = antenna1
-        row2, col2 = antenna2
-        return (row2-row1, col2-col1)
-    end
-
-    function is_valid_antinode(input::Input, freq::Int8, node::Tuple{Int,Int})
-        in_bounds(input, node) || return false
-        same_freq_antennas = input.antennas[freq]
-        return !(node in same_freq_antennas)
+        return length(input.antinodes)
     end
 end
 
 ############################################################################################
 
 module Part2
-    using ..AoC_24_Day8: Input
+    using ..AoC_24_Day8: Input, EMPTY_FREQ, is_in_bounds, transpose_vector, add_antinode!, pretty_print
 
     function solve(input::Input)
-        return nothing
+        for (freq, antennas) in input.antennas
+            len = length(antennas)
+            len < 2 && continue
+            for i in 1:len-1
+                for j in i+1:len
+                    a1 = antennas[i]
+                    a2 = antennas[j]
+                    tp_vec = transpose_vector(a1, a2)
+                    push!(input.antinodes, a1)
+                    for tp in (-1 .* tp_vec, tp_vec)
+                        current = a1
+                        while true
+                            antinode = current .+ tp
+                            !is_in_bounds(input, antinode) && break
+                            add_antinode!(input, antinode, freq)
+                            current = antinode
+                        end
+                    end
+                end
+            end
+        end
+        pretty_print(input.matrix)
+        return length(input.antinodes)
     end
 end
 
