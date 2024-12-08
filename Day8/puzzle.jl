@@ -3,20 +3,18 @@ module AoC_24_Day8
 struct Input
     rows::Int
     columns::Int
-    matrix::Matrix{Int8}
+    matrix::Matrix{Char}
     # From frequency to antenna coordinates
-    antennas::Dict{Int8,Vector{Tuple{Int, Int}}}
+    antennas::Dict{Char,Vector{Tuple{Int, Int}}}
     # Coordinates of the antinodes
     antinodes::Set{Tuple{Int, Int}}
 end
 
-const EMPTY_FREQ = Int8('.')
-
 function Input(input::String)
     rows = count(==('\n'), input)
     columns = findnext('\n', input, 1) - 1
-    matrix = Matrix{Int8}(undef, rows, columns)
-    antennas = Dict{Int8,Vector{Tuple{Int, Int}}}()
+    matrix = Matrix{Char}(undef, rows, columns)
+    antennas = Dict{Char,Vector{Tuple{Int, Int}}}()
     i = j = 1
     io = IOBuffer(input)
     while !eof(io)
@@ -25,15 +23,11 @@ function Input(input::String)
             i += 1
             j = 1
             continue
-        else
-            # Map each frequency to an int. This is mostly for printing purposes.
-            # Nodes containing an antenna and an antinode will be the negative of the frequency.
-            freq = Int8(ch)
-            matrix[i, j] = freq
-            if freq != EMPTY_FREQ
-                !haskey(antennas, freq) && (antennas[freq] = [])
-                push!(antennas[freq], (i, j))
-            end
+        end
+        matrix[i, j] = ch
+        if ch != '.'
+            !haskey(antennas, ch) && (antennas[ch] = [])
+            push!(antennas[ch], (i, j))
         end
         j += 1
     end
@@ -66,28 +60,35 @@ function transpose_vector(antenna1::Tuple{Int, Int}, antenna2::Tuple{Int, Int})
     return (row2-row1, col2-col1)
 end
 
-function add_antinode!(input::Input, antinode::Tuple{Int, Int}, freq::Int8)
+function add_antinode!(input::Input, antinode::Tuple{Int, Int})
     push!(input.antinodes, antinode)
-    prev_val = input.matrix[antinode...]
-    if prev_val == EMPTY_FREQ
-        input.matrix[antinode...] = -freq
-    elseif prev_val > 0
-        input.matrix[antinode...] = -prev_val
+    if input.matrix[antinode...] == '.'
+        input.matrix[antinode...] = '#'
     end
     return nothing
 end
 
-function pretty_print(m::Matrix{Int8})
-    for i in 1:size(m, 1)
-        for e in m[i,:]
-            color = if e == EMPTY_FREQ
-                :black
-            elseif e < 0
-                :red
+# green for antennas
+# red for "normal" antinodes
+# yellow for antennas that are also antinodes
+function pretty_print(input::Input)
+    for i in 1:size(input.matrix, 1)
+        for j in 1:size(input.matrix, 2)
+            ch = input.matrix[i, j]
+            print(' ')
+            if ch == '.'
+                printstyled(ch; color=:black)
+            elseif ch == '#'
+                printstyled(ch; color=:red)
             else
-                :green
+                original = input.matrix[i, j]
+                if (i, j) in input.antinodes
+                    printstyled(original; color=:yellow)
+                else
+                    printstyled(original; color=:green)
+                end
             end
-            printstyled(' ', Char(abs(e)), ' '; color)
+            print(' ')
         end
         println('\n')
     end
@@ -100,7 +101,7 @@ module Part1
     using ..AoC_24_Day8: Input, is_in_bounds, transpose_vector, add_antinode!, pretty_print
 
     function solve(input::Input)
-        for (freq, antennas) in input.antennas
+        for (_, antennas) in input.antennas
             len = length(antennas)
             len < 2 && continue
             for i in 1:len-1
@@ -112,12 +113,12 @@ module Part1
                     for tp in (-1 .* tp_vec, tp_vec .+ tp_vec)
                         antinode = a1 .+ tp
                         !is_in_bounds(input, antinode) && continue
-                        add_antinode!(input, antinode, freq)
+                        add_antinode!(input, antinode)
                     end
                 end
             end
         end
-        # pretty_print(input.matrix)
+        # pretty_print(input)
         return length(input.antinodes)
     end
 end
@@ -128,7 +129,7 @@ module Part2
     using ..AoC_24_Day8: Input, is_in_bounds, transpose_vector, add_antinode!, pretty_print
 
     function solve(input::Input)
-        for (freq, antennas) in input.antennas
+        for (_, antennas) in input.antennas
             len = length(antennas)
             len < 2 && continue
             for i in 1:len-1
@@ -143,14 +144,14 @@ module Part2
                         while true
                             antinode = current .+ tp
                             !is_in_bounds(input, antinode) && break
-                            add_antinode!(input, antinode, freq)
+                            add_antinode!(input, antinode)
                             current = antinode
                         end
                     end
                 end
             end
         end
-        # pretty_print(input.matrix)
+        # pretty_print(input)
         return length(input.antinodes)
     end
 end
