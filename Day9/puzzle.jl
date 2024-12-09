@@ -36,44 +36,21 @@ function Disk(input::String)
     return Disk(entries, gap_indexes, 0, total_file_size)
 end
 
-function solve_file(path::String)
-    return solve_data(read(path, String))
-end
-
-function solve_data(data::String)
+function solve_all(data::String)
     printstyled("Part 1: ", solve_part1(data), "\n"; color=:blue)
     printstyled("Part 2: ", solve_part2(data), "\n"; color=:yellow)
     return nothing
 end
 
 function solve_part1(data::String)
-    disk = Disk(data)
-    score = Part1.solve(disk)
-    pretty_print(disk)
-    return score
+    return Part1.solve(Disk(data))
 end
 
 function solve_part2(data::String)
-    disk = Disk(data)
-    return Part2.solve(disk)
+    return Part2.solve(Disk(data))
 end
 
 ############################################################################################
-
-function test()
-    facts = Dict("example1.txt" => 1928, "example2.txt" => 60)
-    for (file, expected) in facts
-        printstyled("--- testing: ", file, " ---\n"; color=:yellow)
-        actual = solve_part1(read(file, String))
-        printstyled(expected; color=:green)
-        printstyled(" == "; color=:black)
-        if actual == expected
-            printstyled(actual, " ✅\n"; color=:green)
-        else
-            printstyled(actual, " ❌\n"; color=:red)
-        end
-    end
-end
 
 function pretty_print(disk::Disk)
     for entry in disk.entries
@@ -170,6 +147,37 @@ module Part2
 
     function solve(disk::Disk)
         return nothing
+    end
+end
+
+############################################################################################
+############################################################################################
+
+with_file_input(path::String, f::Function) = f(read(path, String))
+
+solve_file(path::String) = with_file_input(path, solve_all)
+
+function test()
+    facts = Dict(
+        "example1.txt" => (1928, nothing),
+        "example2.txt" => (60, nothing),
+    )
+    for (file, expected) in facts
+        expected1, expected2 = expected
+        printstyled("--- testing: ", file, " ---\n"; color=:yellow)
+        assert_result("Part 1", expected1, with_file_input(file, solve_part1))
+        assert_result("Part 2", expected2, with_file_input(file, solve_part2))
+    end
+end
+
+function assert_result(tag, expected, actual)
+    printstyled(tag, ": "; color=:black)
+    printstyled(expected; color=:green)
+    printstyled(" == "; color=:black)
+    if !isnothing(actual) && actual == expected
+        printstyled(actual, " ✅\n"; color=:green)
+    else
+        printstyled(actual, " ❌\n"; color=:red)
     end
 end
 
