@@ -1,38 +1,8 @@
-module AoC_24_DayX
+module Puzzle
 
-struct State
-end
+function solve_part1(data::String) end
 
-function State(input::String)
-    return State()
-end
-
-############################################################################################
-
-module Part1
-    using ..AoC_24_DayX: State
-
-    function solve(state::State)
-        return nothing
-    end
-end
-
-############################################################################################
-
-module Part2
-    using ..AoC_24_DayX: State
-
-    function solve(state::State)
-        return nothing
-    end
-end
-
-############################################################################################
-############################################################################################
-
-solve_part1(data::String) = Part1.solve(State(data))
-
-solve_part2(data::String) = Part2.solve(State(data))
+function solve_part2(data::String) end
 
 with_file_input(path::String, f::Function) = f(read(path, String))
 
@@ -46,7 +16,7 @@ function solve_all(data::String)
     return nothing
 end
 
-function test()
+function test_harness(facts)
     function assert_result(tag, expected, actual)
         if isnothing(expected)
             printstyled(tag, " ❔: nothing == $(actual)\n"; color=:magenta)
@@ -64,9 +34,7 @@ function test()
         return nothing
     end
 
-    for (file, expected) in [
-        ("example1.txt" => (nothing, nothing)),
-    ]
+    for (file, expected) in facts
         expected1, expected2 = expected
         printstyled("--- testing: ", file, " ---\n"; color=:yellow)
         assert_result("Part 1", expected1, with_file_input(file, solve_part1))
