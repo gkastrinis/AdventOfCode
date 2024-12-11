@@ -1,6 +1,6 @@
 module AoC_24_Day11
 
-include("../puzzle.jl")
+include("../aoc_utils.jl")
 
 struct State
     pebbles::Vector{Int}
@@ -11,19 +11,11 @@ function State(input::String)
     return State(pebbles)
 end
 
-function count_digits(n::Int)
-    digits = 1
-    while n >= 10
-        n = n ÷ 10
-        digits += 1
-    end
-    return digits
-end
-
 ############################################################################################
 
 module Part1
-    using ..AoC_24_Day11: State, count_digits
+    using ..AoC_Utils: count_digits
+    using ..AoC_24_Day11: State
 
     function solve(state::State, times)
         for _ in 1:times
@@ -72,44 +64,30 @@ end
 ############################################################################################
 ############################################################################################
 
-Puzzle.solve_part1(data::String) = Part1.solve(State(data), 6)
-Puzzle.solve_part2(data::String) = Part2.solve(State(data), 4)
+using .AoC_Utils: file_data, test_assert
 
-solve_file(path::String) = Puzzle.solve_file(path)
+solve_part1(path::String, times::Int) = Part1.solve(State(file_data(path)), times)
+solve_part2(path::String, times::Int) = Part2.solve(State(file_data(path)), times)
+function solve_all(path::String, times::Int)
+    printstyled("Part 1: "; color=:black)
+    printstyled(Part1.solve(State(file_data(path)), times), "\n"; color=:blue)
+    printstyled("Part 2: "; color=:black)
+    printstyled(Part2.solve(State(file_data(path)), times), "\n"; color=:green)
+    return nothing
+end
 
 function test()
-    return test_harness([
+    for (path, params) in [
         ("example1.txt" => ((6, 53), (nothing, nothing))),
         ("example2.txt" => ((6, 22), (nothing, nothing))),
         ("input.txt" => ((25, 172484), (nothing, nothing))),
-    ])
-end
-
-function test_harness(facts)
-    function assert_result(tag, expected, actual)
-        if isnothing(expected)
-            printstyled(tag, " ❔: nothing == $(actual)\n"; color=:magenta)
-        elseif !isnothing(actual) && actual == expected
-            printstyled(tag, " ✅: "; color=:green)
-            printstyled(expected; color=:green)
-            printstyled(" = "; color=:black)
-            printstyled(actual, "\n"; color=:green)
-        else
-            printstyled(tag, " ❌: "; color=:red)
-            printstyled(expected; color=:green)
-            printstyled(" ≠ "; color=:black)
-            printstyled(actual, "\n"; color=:red)
-        end
-        return nothing
-    end
-
-    for (file, params) in facts
+    ]
         params1, params2 = params
-        times1, expected1 = params1
-        times2, expected2 = params2
-        printstyled("--- testing: ", file, " ---\n"; color=:yellow)
-        !isnothing(times1) && assert_result("Part 1 ($times1 times)", expected1, Part1.solve(State(read(file, String)), times1))
-        !isnothing(times2) && assert_result("Part 2 ($times2 times)", expected2, Part1.solve(State(read(file, String)), times2))
+        t1, expected1 = params1
+        t2, expected2 = params2
+        printstyled("--- testing: ", path, " ---\n"; color=:yellow)
+        !isnothing(t1) && test_assert("Part 1 ($t1 times)", expected1, solve_part1(path, t1))
+        !isnothing(t2) && test_assert("Part 2 ($t2 times)", expected2, solve_part2(path, t2))
     end
     return nothing
 end
