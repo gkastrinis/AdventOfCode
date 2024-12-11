@@ -54,10 +54,42 @@ end
 ############################################################################################
 
 module Part2
+    using ..AoC_Utils: count_digits
     using ..AoC_24_Day11: State
 
     function solve(state::State, times::Int)
-        return nothing
+        memoized = Dict{Tuple{Int, Int}, Int}()
+        score = sum(blink_pebble(p, times, memoized) for p in state.pebbles)
+        printstyled("memoized hits: ", hits, "\n"; color=:blue)
+        return score
+    end
+
+    hits::Int = 0
+
+    function blink_pebble(pebble::Int, times::Int, memoized::Dict{Tuple{Int, Int}, Int})
+        score = 0
+        num_digits = count_digits(pebble)
+
+        if times == 0
+            score = 1
+        elseif haskey(memoized, (pebble, times))
+            global hits
+            hits += 1
+            score = memoized[(pebble, times)]
+        elseif pebble == 0
+            score = blink_pebble(1, times - 1, memoized)
+        elseif num_digits % 2 == 0
+            ten_power = 10^(num_digits ÷ 2)
+            left = pebble ÷ ten_power
+            right = pebble - left * ten_power
+            score = blink_pebble(left, times - 1, memoized) +
+                    blink_pebble(right, times - 1, memoized)
+        else
+            score = blink_pebble(pebble * 2024, times - 1, memoized)
+        end
+
+        memoized[(pebble, times)] = score
+        return score
     end
 end
 
@@ -78,9 +110,9 @@ end
 
 function test()
     for (path, params) in [
-        ("example1.txt" => ((6, 53), (nothing, nothing))),
-        ("example2.txt" => ((6, 22), (nothing, nothing))),
-        ("input.txt" => ((25, 172484), (nothing, nothing))),
+        ("example1.txt" => ((6, 53), (75, 149161030616311))),
+        ("example2.txt" => ((6, 22), (75, 65601038650482))),
+        ("example3.txt" => ((6, 7), (75, 22840618691206))),
     ]
         params1, params2 = params
         t1, expected1 = params1
