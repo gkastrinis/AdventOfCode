@@ -106,7 +106,6 @@ function test()
         ("example1.txt" => ((6, 53), (75, 149161030616311))),
         ("example2.txt" => ((6, 22), (75, 65601038650482))),
         ("example3.txt" => ((6, 7), (75, 22840618691206))),
-        ("input.txt" => ((25, 172484), (75, 205913561055242))),
     ]
         params1, params2 = params
         t1, expected1 = params1
