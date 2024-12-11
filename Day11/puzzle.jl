@@ -61,10 +61,12 @@ module Part2
         memoized = Dict{Tuple{Int, Int}, Int}()
         score = sum(blink_pebble(p, times, memoized) for p in state.pebbles)
         printstyled("memoized hits: ", hits, "\n"; color=:blue)
+        printstyled("memoized avg depth: ", hit_avg_depth, "\n"; color=:blue)
         return score
     end
 
     hits::Int = 0
+    hit_avg_depth = 0
 
     function blink_pebble(pebble::Int, times::Int, memoized::Dict{Tuple{Int, Int}, Int})
         score = 0
@@ -73,8 +75,9 @@ module Part2
         if times == 0
             score = 1
         elseif haskey(memoized, (pebble, times))
-            global hits
+            global hits, hit_avg_depth
             hits += 1
+            hit_avg_depth = (hit_avg_depth * (hits - 1) + times) / hits
             score = memoized[(pebble, times)]
         elseif pebble == 0
             score = blink_pebble(1, times - 1, memoized)
