@@ -1,26 +1,23 @@
 module AoC_24_Day11
 
-include("../aoc_utils.jl")
+include("../AoC_Utils.jl")
 
 struct State
     pebbles::Vector{Int}
 end
 
 function State(input::String)
-    pebbles = [parse(Int, n) for n in split(input)]
-    return State(pebbles)
+    return State([parse(Int, n) for n in split(input)])
 end
 
 ############################################################################################
 
 module Part1
-    using ..AoC_Utils: count_digits
+    using ..AoC_Utils: @n_times, count_digits
     using ..AoC_24_Day11: State
 
     function solve(state::State, times)
-        for _ in 1:times
-            blink(state)
-        end
+        @n_times times blink(state)
         return length(state.pebbles)
     end
 
@@ -99,23 +96,17 @@ end
 ############################################################################################
 ############################################################################################
 
-using .AoC_Utils: file_data, test_assert
+using .AoC_Utils: @filedata, test_assert
 
-solve_part1(path::String, times::Int) = Part1.solve(State(file_data(path)), times)
-solve_part2(path::String, times::Int) = Part2.solve(State(file_data(path)), times)
-function solve_all(path::String, times::Int)
-    printstyled("Part 1: "; color=:black)
-    printstyled(Part1.solve(State(file_data(path)), times), "\n"; color=:blue)
-    printstyled("Part 2: "; color=:black)
-    printstyled(Part2.solve(State(file_data(path)), times), "\n"; color=:green)
-    return nothing
-end
+solve_part1(path::String, times::Int) = Part1.solve(State(@filedata path), times)
+solve_part2(path::String, times::Int) = Part2.solve(State(@filedata path), times)
 
 function test()
     for (path, params) in [
         ("example1.txt" => ((6, 53), (75, 149161030616311))),
         ("example2.txt" => ((6, 22), (75, 65601038650482))),
         ("example3.txt" => ((6, 7), (75, 22840618691206))),
+        ("input.txt" => ((25, 172484), (75, 205913561055242))),
     ]
         params1, params2 = params
         t1, expected1 = params1
