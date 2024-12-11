@@ -1,6 +1,20 @@
 module AoC_Utils
 
-file_data(path) = read(path, String)
+macro filedata(path)
+    return quote
+        read($(esc(path)), String)
+    end
+end
+
+macro n_times(n, body)
+    return quote
+        for _ in 1:$(esc(n))
+            $(esc(body))
+        end
+    end
+end
+
+############################################################################################
 
 function test_assert(tag, expected, actual)
     if isnothing(expected)
@@ -26,6 +40,23 @@ function count_digits(n::Int)
         digits += 1
     end
     return digits
+end
+
+function next_int(io::IO)
+    res = nothing
+    while !eof(io)
+        ch = peek(io, Char)
+        isspace(ch) || break
+        read(io, Char)
+    end
+    while !eof(io)
+        ch = peek(io, Char)
+        '0' <= ch <= '9' || break
+        read(io, Char)
+        digit = ch - '0'
+        res = isnothing(res) ? digit : res * 10 + digit
+    end
+    return res
 end
 
 end
