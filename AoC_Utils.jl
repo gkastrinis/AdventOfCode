@@ -16,6 +16,8 @@ end
 
 ############################################################################################
 
+const Point = Tuple{Int, Int}
+
 function test_assert(tag, expected, actual)
     if isnothing(expected)
         printstyled(tag, " ❔: nothing == $(actual)\n"; color=:magenta)
@@ -57,6 +59,22 @@ function next_int(io::IO)
         res = isnothing(res) ? digit : res * 10 + digit
     end
     return res
+end
+
+function pretty_print(f::Function, m::Matrix{T}, interactive::Bool=true) where T
+    interactive && (sleep(0.1); Base.run(`clear`))
+    println("\n")
+    for i in 1:size(m, 1)
+        for j in 1:size(m, 2)
+            f(i, j)
+        end
+        println('\n')
+    end
+    return nothing
+end
+
+function in_bounds(matrix::Matrix{T}, row::Int, column::Int) where T
+    return 1 <= row <= size(matrix, 1) && 1 <= column <= size(matrix, 2)
 end
 
 end
