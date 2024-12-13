@@ -183,12 +183,15 @@ module Part2
         # They only share a corner if the diagonal has a corner, and the other two neighbors
         # are adjacent.
         #
-        # x | O O
-        # - + O O
-        # O O X O
-        # O O O O
+        #  + - - + + - -       + - - - - - -
+        #  | . . | | . .       | . . . . . .
+        #  | . X | | . .       | . . . . . .
+        #  + - - + | . .  ==>  | . . . . . .
+        #  + - - - X . .       | . . . . . .
+        #  | . . . . . .       | . . . . . .
+        #  | . . . . . .       | . . . . . .
         #
-        # "x" is a corner, "O" is a common plot
+        # "X" is a corner
         # The corners are shared and can coalesce
         if common_edge1 && common_edge2 &&
             is_same_value(state, neighbor3, point) &&
@@ -201,7 +204,20 @@ module Part2
 
         # If only one side is common, those corners can coalesce
         #
-        # x | | x O ...
+        #  + - - + + - -        + - - - - - -
+        #  | . . | | . .   ==>  | . . . . . .
+        #  | . X | | X .        | . . . . . .
+        #  + - - + + - -        + - - - - - -
+        #
+        #  OR
+        #
+        #  + - - +              + - - - +
+        #  | . . |              | . . . |
+        #  | . X |              | . . . |
+        #  + - - +         ==>  | . . . |
+        #  + - - +              | . . . |
+        #  | . X |              | . . . |
+        #  | . . |              | . . . |
         #
         if neighbor1_has_corner && !neighbor2_has_corner
             delete!(corner_set, neighbor1_corner)
@@ -214,6 +230,15 @@ module Part2
 
         # If both sides are common, (and the diagonal has no sharing corner),
         # the current corner overrides the other two (but remains!)
+        #
+        #  + - - + + - -       + - - - - - -
+        #  | . . | | . .       | . . . . . .
+        #  | . X | | X .       | . X + - - -
+        #  + - - + + - -  ==>  | . . | . . .
+        #  + - - +             | . . | . . .
+        #  | . X |             | . . | . . .
+        #  | . . |             | . . | . . .
+        #
         if neighbor1_has_corner && neighbor2_has_corner
             delete!(corner_set, neighbor1_corner)
             delete!(corner_set, neighbor2_corner)
