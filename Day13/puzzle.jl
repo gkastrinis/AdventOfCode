@@ -106,10 +106,42 @@ end
 ############################################################################################
 
 module Part2
-    using ..AoC_24_Day13: State
+    using ..AoC_24_Day13: Configuration, State, cost
+
+    const OFFSET = 10000000000000
 
     function solve(state::State)
-        return nothing
+        total_cost = 0
+        for configuration in state.configurations
+            cost = solve_configuration(configuration)
+            cost > 0 && (total_cost += cost)
+        end
+        return total_cost
+    end
+
+    function solve_configuration(configuration::Configuration)
+        prize = configuration.prize + (OFFSET, OFFSET)
+
+        aX, aY = configuration.button_a
+        bX, bY = configuration.button_b
+        prizeX, prizeY = prize
+
+        # aX * A + bX * B = prizeX
+        # aY * A + bY * B = prizeY
+        # ------------------------
+        #  bY * (aX * A) + bY * (bX * B) =  bY * prizeX   | *   bY
+        # -bX * (aY * A) - bX * (bY * B) = -bX * prizeY   | * (-bX)
+        # ------------------------
+        # (bY * aX - bX * aY) * A = bY * prizeX - bX * prizeY
+        # ------------------------
+        # A = (bY * prizeX - bX * prizeY) / (bY * aX - bX * aY)
+        # B = (prizeX - aX * A) / bX
+
+        A, A_rem = divrem(bY * prizeX - bX * prizeY, bY * aX - bX * aY)
+        A_rem == 0 || return 0
+        B, B_rem = divrem(prizeX - aX * A, bX)
+        B_rem == 0 || return 0
+        return cost(A, B)
     end
 end
 
@@ -123,7 +155,7 @@ solve_part2(path::String) = Part2.solve(State(@filedata path))
 
 function test()
     for (path, args) in [
-        ("example1.txt" => (480, nothing)),
+        ("example1.txt" => (480, 875318608908)),
     ]
         expected1, expected2 = args
         printstyled("--- testing: ", path, " ---\n"; color=:yellow)
