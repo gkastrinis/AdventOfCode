@@ -154,7 +154,8 @@ module Part2
 
     # Check if the given corner coalesces with existing corners
     function coalesce_corners(state::State, point::Point, corner_dir::Direction, corner_set::Set{Corner})
-
+        # Check the corners on the grid cells that are adjacent to the current point
+        # and in the diagonal direction of the current corner
         (n1, c1, n2, c2, n3, c3) = if corner_dir == NW
             (N, SW, W, NE, NW, SE)
         elseif corner_dir == NE
@@ -165,47 +166,61 @@ module Part2
             (S, NW, W, SE, SW, NE)
         end
         neighbor1 = point + n1
-        neighbor2 = point + n2
-        neighbor3 = point + n3
         neighbor1_corner = (neighbor1, c1)
+        neighbor2 = point + n2
         neighbor2_corner = (neighbor2, c2)
+        neighbor3 = point + n3
         neighbor3_corner = (neighbor3, c3)
 
-
+        # Check if the current point shares an edge with the neighbor
         common_edge1 = is_same_value(state, neighbor1, point) && (neighbor1 in state.visited)
         common_edge2 = is_same_value(state, neighbor2, point) && (neighbor2 in state.visited)
+        # Check if the adjacent neighbor has a corner towards this side
+        neighbor1_has_corner = common_edge1 && (neighbor1_corner in corner_set)
+        neighbor2_has_corner = common_edge2 && (neighbor2_corner in corner_set)
 
-        corner1 = common_edge1 && (neighbor1_corner in corner_set)
-        corner2 = common_edge2 && (neighbor2_corner in corner_set)
-
-        corner_diag = common_edge1 && common_edge2 &&
-            is_same_value(state, neighbor3, point) && (neighbor3 in state.visited) &&
+        # Check if the current point shares a corner with the neighbor in the diagonal direction
+        # They only share a corner if the diagonal has a corner, and the other two neighbors
+        # are adjacent.
+        #
+        # x | O O
+        # - + O O
+        # O O X O
+        # O O O O
+        #
+        # "x" is a corner, "O" is a common plot
+        # The corners are shared and can coalesce
+        if common_edge1 && common_edge2 &&
+            is_same_value(state, neighbor3, point) &&
+            (neighbor3 in state.visited) &&
             (neighbor3_corner in corner_set)
 
-        if corner_diag
             delete!(corner_set, neighbor3_corner)
             return true
         end
 
-        if corner1 && !corner2
+        # If only one side is common, those corners can coalesce
+        #
+        # x | | x O ...
+        #
+        if neighbor1_has_corner && !neighbor2_has_corner
             delete!(corner_set, neighbor1_corner)
             return true
         end
-
-        if corner2 && !corner1
+        if neighbor2_has_corner && !neighbor1_has_corner
             delete!(corner_set, neighbor2_corner)
             return true
         end
 
-        if corner1 && corner2
+        # If both sides are common, (and the diagonal has no sharing corner),
+        # the current corner overrides the other two (but remains!)
+        if neighbor1_has_corner && neighbor2_has_corner
             delete!(corner_set, neighbor1_corner)
             delete!(corner_set, neighbor2_corner)
-            return false
         end
 
         return false
     end
-
 
     function print_corner_set(corner_set::Set{Corner})
         printstyled("CS ($(length(corner_set))): "; color=:black)
