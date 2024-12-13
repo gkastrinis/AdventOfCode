@@ -78,6 +78,9 @@ const LEFT_TURN = Dict(N => W, W => S, S => E, E => N)
 const RIGHT_TURN = Dict(N => E, E => S, S => W, W => N)
 
 Base.:+(p::Point, dir::Direction) = (p[1] + dir[1], p[2] + dir[2])
+Base.:-(p::Point, dir::Direction) = (p[1] - dir[1], p[2] - dir[2])
+Base.:*(p::Point, times::Int) = (p[1] * times, p[2] * times)
+
 
 function pretty_print(f::Function, m::Matrix{T}, interactive::Bool=true) where T
     interactive && (sleep(0.1); Base.run(`clear`))
