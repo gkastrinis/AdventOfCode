@@ -2,7 +2,9 @@ module AoC_24_Day12
 
 include("../AoC_Utils.jl")
 
-using .AoC_Utils: Point
+import .AoC_Utils: pretty_print
+
+using .AoC_Utils: AoC_Utils, Point, in_bounds
 
 struct State
     matrix::Matrix{Char}
@@ -35,70 +37,182 @@ function State(input::String)
     return State(matrix, to_visit, visited)
 end
 
+function AoC_Utils.pretty_print(state::State)
+    return nothing
+    pretty_print(state.matrix, false) do i, j
+        ch = (i, j) in state.visited ? '.' : state.matrix[i, j]
+        color = (i, j) in state.visited ? :blue : :yellow
+        printstyled(ch, ' '; color=color)
+    end
+end
+
+function is_same_value(state::State, point1::Point, point2::Point)
+    return in_bounds(state.matrix, point1) && in_bounds(state.matrix, point2) &&
+        state.matrix[point1...] == state.matrix[point2...]
+end
+
+function is_same_value(state::State, point::Point, value::Char)
+    return in_bounds(state.matrix, point) && state.matrix[point...] == value
+end
+
 ############################################################################################
 
 module Part1
-    import ..AoC_Utils: in_bounds, pretty_print
-
-    using ..AoC_Utils: AoC_Utils
-    using ..AoC_24_Day12: Point, State
+    using ..AoC_Utils: Point, N, E, S, W
+    using ..AoC_24_Day12: State, pretty_print, is_same_value
 
     function solve(state::State)
         score = 0
         while !isempty(state.to_visit)
             point = pop!(state.to_visit)
-            area, perimeter = flood(state, state.matrix[point...], point)
+            area, perimeter = flood(state, point)
             score += area * perimeter
         end
         pretty_print(state)
         return score
     end
 
-    function flood(state::State, value::Char, point::Point)
+    function flood(state::State, point::Point)
+        return flood(state, point, state.matrix[point...])
+    end
+
+    function flood(state::State, point::Point, value::Char)
         pretty_print(state)
         point in state.visited && return (0, 0)
         push!(state.visited, point)
 
-        area_score = 1
-        perimeter_score = 0
+        total_area = 1
+        total_perimeter = 0
         local_perimeter = 4
         row, column = point
-        for (i, j) in [(row-1, column), (row+1, column), (row, column-1), (row, column+1)]
-            in_bounds(state, i, j) || continue
-            state.matrix[i, j] == value || continue
+        for direction in (N, E, S, W)
+            neighbor = point + direction
+            is_same_value(state, neighbor, value) || continue
 
             local_perimeter -= 1
-            (i, j) in state.visited && continue
-            delete!(state.to_visit, (i, j))
+            neighbor in state.visited && continue
+            delete!(state.to_visit, neighbor)
 
-            area, perimeter = flood(state, value, (i, j))
-            area_score += area
-            perimeter_score += perimeter
+            area, perimeter = flood(state, neighbor, value)
+            total_area += area
+            total_perimeter += perimeter
         end
-        return (area_score, perimeter_score + local_perimeter)
-    end
-
-    function AoC_Utils.in_bounds(state::State, row::Int, column::Int)
-        return in_bounds(state.matrix, row, column)
-    end
-
-    function AoC_Utils.pretty_print(state::State)
-        return nothing
-        pretty_print(state.matrix) do i, j
-            ch = (i, j) in state.visited ? '.' : state.matrix[i, j]
-            color = (i, j) in state.visited ? :blue : :yellow
-            printstyled(ch, ' '; color=color)
-        end
+        return (total_area, total_perimeter + local_perimeter)
     end
 end
 
 ############################################################################################
 
 module Part2
-    using ..AoC_24_Day12: State
+    using ..AoC_Utils: Point, Direction, N, E, S, W, NE, SE, SW, NW, DIR_TO_SYMBOL
+    using ..AoC_24_Day12: State, pretty_print, is_same_value
+
+    const Corner = Tuple{Point, Direction}
 
     function solve(state::State)
-        return nothing
+        score = 0
+        while !isempty(state.to_visit)
+            point = pop!(state.to_visit)
+            area, sides = flood(state, point)
+            score += area * sides
+        end
+        pretty_print(state)
+        return score
+    end
+
+    function flood(state::State, point::Point)
+        return flood(state, point, state.matrix[point...], Set{Corner}())
+    end
+
+    function flood(state::State, point::Point, value::Char, corner_set::Set{Corner})
+        pretty_print(state)
+        point in state.visited && return (0, 0)
+        push!(state.visited, point)
+
+        # The current point introduces 4 corners
+        # Only keep those that don't coalesce with existing corners
+        for corner_dir in (NW, NE, SE, SW)
+            corner = (point, corner_dir)
+            coalesce_corners(state, point, corner_dir, corner_set) && continue
+            push!(corner_set, corner)
+        end
+
+        total_area = 1
+        corners = length(corner_set)
+        for direction in (N, E, S, W)
+            neighbor = point + direction
+            is_same_value(state, neighbor, value) || continue
+
+            neighbor in state.visited && continue
+            delete!(state.to_visit, neighbor)
+
+            area, corners = flood(state, neighbor, value, corner_set)
+            total_area += area
+        end
+        return (total_area, corners)
+    end
+
+    # Check if the given corner coalesces with existing corners
+    function coalesce_corners(state::State, point::Point, corner_dir::Direction, corner_set::Set{Corner})
+
+        (n1, c1, n2, c2, n3, c3) = if corner_dir == NW
+            (N, SW, W, NE, NW, SE)
+        elseif corner_dir == NE
+            (N, SE, E, NW, NE, SW)
+        elseif corner_dir == SE
+            (S, NE, E, SW, SE, NW)
+        elseif corner_dir == SW
+            (S, NW, W, SE, SW, NE)
+        end
+        neighbor1 = point + n1
+        neighbor2 = point + n2
+        neighbor3 = point + n3
+        neighbor1_corner = (neighbor1, c1)
+        neighbor2_corner = (neighbor2, c2)
+        neighbor3_corner = (neighbor3, c3)
+
+
+        common_edge1 = is_same_value(state, neighbor1, point) && (neighbor1 in state.visited)
+        common_edge2 = is_same_value(state, neighbor2, point) && (neighbor2 in state.visited)
+
+        corner1 = common_edge1 && (neighbor1_corner in corner_set)
+        corner2 = common_edge2 && (neighbor2_corner in corner_set)
+
+        corner_diag = common_edge1 && common_edge2 &&
+            is_same_value(state, neighbor3, point) && (neighbor3 in state.visited) &&
+            (neighbor3_corner in corner_set)
+
+        if corner_diag
+            delete!(corner_set, neighbor3_corner)
+            return true
+        end
+
+        if corner1 && !corner2
+            delete!(corner_set, neighbor1_corner)
+            return true
+        end
+
+        if corner2 && !corner1
+            delete!(corner_set, neighbor2_corner)
+            return true
+        end
+
+        if corner1 && corner2
+            delete!(corner_set, neighbor1_corner)
+            delete!(corner_set, neighbor2_corner)
+            return false
+        end
+
+        return false
+    end
+
+
+    function print_corner_set(corner_set::Set{Corner})
+        printstyled("CS ($(length(corner_set))): "; color=:black)
+        for (point, dir) in corner_set
+            printstyled("[$point $(DIR_TO_SYMBOL[dir])]", ' '; color=:magenta)
+        end
+        println()
     end
 end
 
@@ -112,9 +226,16 @@ solve_part2(path::String) = Part2.solve(State(@filedata path))
 
 function test()
     for (path, args) in [
-        ("example1.txt" => (140, nothing)),
-        ("example2.txt" => (772, nothing)),
-        ("example3.txt" => (1930, nothing)),
+        ("example1.txt" => (140, 80)),
+        ("example2.txt" => (772, 436)),
+        ("example3.txt" => (1930, 1206)),
+        ("example4.txt" => (692, 236)),
+        ("example5.txt" => (1184, 368)),
+        ("example6.txt" => (296, 156)),
+        ("example7.txt" => (1146, 616)),
+        ("example8.txt" => (320, 112)),
+        ("example9.txt" => (468, 192)),
+        ("example10.txt" => (684, 300)),
     ]
         expected1, expected2 = args
         printstyled("--- testing: ", path, " ---\n"; color=:yellow)
