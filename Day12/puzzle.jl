@@ -234,10 +234,10 @@ module Part2
         #  + - - + + - -       + - - - - - -
         #  | . . | | . .       | . . . . . .
         #  | . X | | X .       | . X + - - -
-        #  + - - + + - -  ==>  | . . | . . .
-        #  + - - +             | . . | . . .
-        #  | . X |             | . . | . . .
-        #  | . . |             | . . | . . .
+        #  + - - + + - -  ==>  | . . |
+        #  + - - +             | . . |
+        #  | . X |             | . . |
+        #  | . . |             | . . |
         #
         if neighbor1_has_corner && neighbor2_has_corner
             delete!(corner_set, neighbor1_corner)
