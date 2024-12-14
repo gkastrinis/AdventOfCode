@@ -49,7 +49,7 @@ function next_int(io::IO)
         isspace(ch) || break
         read(io, Char)
     end
-    sign = if peek(io, Char) == '-'
+    sign = if !eof(io) && peek(io, Char) == '-'
         read(io, Char)
         -1
     else

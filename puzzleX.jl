@@ -12,7 +12,7 @@ end
 ############################################################################################
 
 module Part1
-    using ..AoC_24_DayX: State
+    using ..AoC_YY_DayX: State
 
     function solve(state::State)
         return nothing
@@ -22,7 +22,7 @@ end
 ############################################################################################
 
 module Part2
-    using ..AoC_24_DayX: State
+    using ..AoC_YY_DayX: State
 
     function solve(state::State)
         return nothing
