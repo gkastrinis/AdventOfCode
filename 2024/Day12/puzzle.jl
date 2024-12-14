@@ -1,6 +1,6 @@
 module AoC_24_Day12
 
-include("../AoC_Utils.jl")
+include("../../AoC_Utils.jl")
 
 import .AoC_Utils: pretty_print
 

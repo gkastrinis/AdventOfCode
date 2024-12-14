@@ -1,6 +1,6 @@
-module AoC_24_DayX
+module AoC_YY_DayX
 
-include("../AoC_Utils.jl")
+include("../../AoC_Utils.jl")
 
 struct State
 end

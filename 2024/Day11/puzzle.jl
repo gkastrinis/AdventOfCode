@@ -1,6 +1,6 @@
 module AoC_24_Day11
 
-include("../AoC_Utils.jl")
+include("../../AoC_Utils.jl")
 
 struct State
     pebbles::Vector{Int}

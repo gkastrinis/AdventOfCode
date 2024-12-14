@@ -1,6 +1,6 @@
 module AoC_24_Day13
 
-include("../AoC_Utils.jl")
+include("../../AoC_Utils.jl")
 
 using .AoC_Utils: Point, @n_times, next_int
 
