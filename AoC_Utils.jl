@@ -68,7 +68,6 @@ end
 
 ############################################################################################
 
-
 const Point = Tuple{Int, Int}
 
 const Direction = Tuple{Int, Int}
@@ -95,7 +94,7 @@ function pretty_print(f::Function, m::Matrix{T}, interactive::Bool=true) where T
         for j in 1:size(m, 2)
             f(i, j)
         end
-        println('\n')
+        println()
     end
     return nothing
 end

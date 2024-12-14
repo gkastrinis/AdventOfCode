@@ -52,9 +52,10 @@ module Part1
     using ..AoC_24_Day14: Robot, State
 
     function solve(state::State, seconds::Int)
+        cols, rows = state.cols, state.rows
         quadrants = Int[0, 0, 0, 0]
         for robot in state.robots
-            new_point = move_robot(state, robot, seconds)
+            new_point = move_robot(cols, rows, robot, seconds)
             quadrant = to_quadrant(state, new_point)
             quadrant == 0 && continue
             quadrants[quadrant] += 1
@@ -62,13 +63,15 @@ module Part1
         return prod(quadrants)
     end
 
-    function move_robot(state::State, robot::Robot, times::Int)
+    function move_robot(cols::Int, rows::Int, robot::Robot, times::Int)
         unwrapped_destination = robot.origin + (robot.velocity * times)
-        wrapped_destination = (unwrapped_destination[1] % state.cols, unwrapped_destination[2] % state.rows)
+        wrapped_destination = (unwrapped_destination[1] % cols, unwrapped_destination[2] % rows)
         # Change to positive coordinates
         # (2, -3) on a 11x7 grid is (2, 4)
         col, row = wrapped_destination
-        return (col < 0 ? col + state.cols : col, row < 0 ? row + state.rows : row)
+        col < 0 && (col += cols)
+        row < 0 && (row += rows)
+        return (col, row)
     end
 
     # 1 2
@@ -90,10 +93,56 @@ end
 ############################################################################################
 
 module Part2
-    using ..AoC_24_Day14: State
+    using ..AoC_Utils: Point, pretty_print
+    using ..AoC_24_Day14: Robot, State
+    using ..AoC_24_Day14.Part1: move_robot
 
     function solve(state::State)
-        return nothing
+        cols, rows = state.cols, state.rows
+        matrix = Matrix{Char}(undef, rows, cols)
+        min_second, min_clusters, min_matrix = nothing, nothing, nothing
+        for second in 1:10000
+            for i in 1:length(state.robots)
+                robot = state.robots[i]
+                new_position = move_robot(cols, rows, robot, 1)
+                matrix[robot.origin[2]+1, robot.origin[1]+1] = '.'
+                matrix[new_position[2]+1, new_position[1]+1] = 'R'
+                state.robots[i] = Robot(new_position, robot.velocity)
+            end
+
+            clusters = find_clusters(deepcopy(matrix), rows, cols)
+            if isnothing(min_clusters) || clusters < min_clusters
+                min_second, min_clusters, min_matrix = second, clusters, deepcopy(matrix)
+            end
+        end
+        pretty_print(min_matrix) do i, j
+            c = min_matrix[i, j]
+            printstyled(c; color=(c == 'R' ? :yellow : :magenta))
+        end
+        printstyled("second: $min_second, clusters: $min_clusters\n"; color=:magenta)
+        return min_second
+    end
+
+    function find_clusters(matrix, rows, cols)
+        clusters = 0
+        for row in 1:rows
+            for col in 1:cols
+                matrix[row, col] == '.' && continue
+                clusters += 1
+                flood_fill(matrix, rows, cols, row, col)
+            end
+        end
+        return clusters
+    end
+
+    function flood_fill(matrix, rows, cols, row, col)
+        (1 <= row <= rows && 1 <= col <= cols) || return
+        matrix[row, col] == 'R' || return
+        matrix[row, col] = '.'
+        # Only need to check the "next" neighbors. Previous neighbors are already checked.
+        flood_fill(matrix, rows, cols, row, col + 1)
+        flood_fill(matrix, rows, cols, row + 1, col + 1)
+        flood_fill(matrix, rows, cols, row + 1, col)
     end
 end
 
