@@ -49,6 +49,12 @@ function next_int(io::IO)
         isspace(ch) || break
         read(io, Char)
     end
+    sign = if peek(io, Char) == '-'
+        read(io, Char)
+        -1
+    else
+        1
+    end
     while !eof(io)
         ch = peek(io, Char)
         '0' <= ch <= '9' || break
@@ -56,7 +62,8 @@ function next_int(io::IO)
         digit = ch - '0'
         res = isnothing(res) ? digit : res * 10 + digit
     end
-    return res
+    isnothing(res) && return nothing
+    return sign * res
 end
 
 ############################################################################################
@@ -80,7 +87,6 @@ const RIGHT_TURN = Dict(N => E, E => S, S => W, W => N)
 Base.:+(p::Point, dir::Direction) = (p[1] + dir[1], p[2] + dir[2])
 Base.:-(p::Point, dir::Direction) = (p[1] - dir[1], p[2] - dir[2])
 Base.:*(p::Point, times::Int) = (p[1] * times, p[2] * times)
-
 
 function pretty_print(f::Function, m::Matrix{T}, interactive::Bool=true) where T
     interactive && (sleep(0.1); Base.run(`clear`))
