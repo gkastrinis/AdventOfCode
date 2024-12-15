@@ -138,7 +138,6 @@ module Part2
             else
                 vertical_points_to_move(m, [robot], direction)
             end
-            # printstyled(points_to_move; color=:red)
             isempty(points_to_move) && return nothing
             puzzle.robot = next
 
@@ -192,7 +191,6 @@ module Part2
             end
             # All next points are empty to move into
             isempty(new_points) && return all_points
-            # println("???", new_points)
             unique!(new_points)
             points = new_points
             append!(all_points, new_points)
