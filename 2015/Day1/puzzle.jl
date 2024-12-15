@@ -2,18 +2,18 @@ module AoC_15_Day1
 
 include("../../AoC_Utils.jl")
 
-struct State
+struct Puzzle
     input::String
 end
 
 ############################################################################################
 
 module Part1
-    using ..AoC_15_Day1: State
+    using ..AoC_15_Day1: Puzzle
 
-    function solve(state::State)
+    function solve(puzzle::Puzzle)
         counter = 0
-        for char in state.input
+        for char in puzzle.input
             if char == '('
                 counter += 1
             elseif char == ')'
@@ -27,14 +27,14 @@ end
 ############################################################################################
 
 module Part2
-    using ..AoC_15_Day1: State
+    using ..AoC_15_Day1: Puzzle
 
-    function solve(state::State)
+    function solve(puzzle::Puzzle)
         counter = 0
-        for i in 1:length(state.input)
-            if state.input[i] == '('
+        for i in 1:length(puzzle.input)
+            if puzzle.input[i] == '('
                 counter += 1
-            elseif state.input[i] == ')'
+            elseif puzzle.input[i] == ')'
                 counter -= 1
             end
             counter == -1 && return i
@@ -44,11 +44,10 @@ module Part2
 end
 
 ############################################################################################
-############################################################################################
 
 using .AoC_Utils: @filedata
 
-solve_part1(path::String) = Part1.solve(State(@filedata path))
-solve_part2(path::String) = Part2.solve(State(@filedata path))
+solve_part1(path::String) = Part1.solve(Puzzle(@filedata path))
+solve_part2(path::String) = Part2.solve(Puzzle(@filedata path))
 
 end

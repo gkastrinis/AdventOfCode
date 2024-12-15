@@ -2,19 +2,19 @@ module AoC_YY_DayX
 
 include("../../AoC_Utils.jl")
 
-struct State
+struct Puzzle
 end
 
-function State(input::String)
-    return State()
+function Puzzle(input::String)
+    return Puzzle()
 end
 
 ############################################################################################
 
 module Part1
-    using ..AoC_YY_DayX: State
+    using ..AoC_YY_DayX: Puzzle
 
-    function solve(state::State)
+    function solve(puzzle::Puzzle)
         return nothing
     end
 end
@@ -22,20 +22,19 @@ end
 ############################################################################################
 
 module Part2
-    using ..AoC_YY_DayX: State
+    using ..AoC_YY_DayX: Puzzle
 
-    function solve(state::State)
+    function solve(puzzle::Puzzle)
         return nothing
     end
 end
 
 ############################################################################################
-############################################################################################
 
 using .AoC_Utils: @filedata, test_assert
 
-solve_part1(path::String) = Part1.solve(State(@filedata path))
-solve_part2(path::String) = Part2.solve(State(@filedata path))
+solve_part1(path::String) = Part1.solve(Puzzle(@filedata path))
+solve_part2(path::String) = Part2.solve(Puzzle(@filedata path))
 
 function test()
     for (path, args) in [

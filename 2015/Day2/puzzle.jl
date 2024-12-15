@@ -10,11 +10,11 @@ struct Box
     height::Int
 end
 
-struct State
+struct Puzzle
     boxes::Vector{Box}
 end
 
-function State(input::String)
+function Puzzle(input::String)
     boxes = Box[]
     io = IOBuffer(input)
     while !eof(io)
@@ -29,17 +29,17 @@ function State(input::String)
 
         push!(boxes, Box(length, width, height))
     end
-    return State(boxes)
+    return Puzzle(boxes)
 end
 
 ############################################################################################
 
 module Part1
-    using ..AoC_15_Day2: State
+    using ..AoC_15_Day2: Puzzle
 
-    function solve(state::State)
+    function solve(puzzle::Puzzle)
         total = 0
-        for box in state.boxes
+        for box in puzzle.boxes
             total += 2 * (box.length * box.width + box.length * box.height + box.width * box.height)
         end
         return total
@@ -49,11 +49,11 @@ end
 ############################################################################################
 
 module Part2
-    using ..AoC_15_Day2: State
+    using ..AoC_15_Day2: Puzzle
 
-    function solve(state::State)
+    function solve(puzzle::Puzzle)
         total = 0
-        for box in state.boxes
+        for box in puzzle.boxes
             total += 2 * (box.length + box.width + box.height - max(box.length, box.width, box.height))
             total += box.length * box.width * box.height
         end
@@ -62,11 +62,10 @@ module Part2
 end
 
 ############################################################################################
-############################################################################################
 
 using .AoC_Utils: @filedata
 
-solve_part1(path::String) = Part1.solve(State(@filedata path))
-solve_part2(path::String) = Part2.solve(State(@filedata path))
+solve_part1(path::String) = Part1.solve(Puzzle(@filedata path))
+solve_part2(path::String) = Part2.solve(Puzzle(@filedata path))
 
 end
