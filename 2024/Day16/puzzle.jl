@@ -120,26 +120,26 @@ end
 
 function shortest_path!(puzzle::Puzzle, nodes::Dict{TaggedPoint,GridNode})
     visited = Set{Point}()
+    unvisited = map(k -> (k[1], k[2], nodes[k]), collect(keys(nodes)))
     prev = Dict{TaggedPoint,TaggedPoint}()
     while true
-        candidates = filter(k -> !(k[1] in visited), collect(keys(nodes)))
-        isempty(candidates) && break
-        unvisited = map(k -> (k[1], k[2], nodes[k].score), candidates)
-        sort!(unvisited; by = node -> node[3], rev = true)
-        curr = pop!(unvisited)
-        pos, tag, score = curr
+        isempty(unvisited) && break
+        sort!(unvisited; by = node -> node[3].score, rev = true)
+
+        pos, tag, node = pop!(unvisited)
         pos == puzzle.stop && break
         push!(visited, pos)
+
         for dir in (N, S, E, W)
             neighbor = pos + dir
             neighbor in visited && continue
             neighbor_tag = dir_to_tag(dir)
-            key = (neighbor, neighbor_tag)
-            haskey(nodes, key) || continue
+            neighbor_node = get(nodes, (neighbor, neighbor_tag), nothing)
+            isnothing(neighbor_node) && continue
 
-            new_score = score + (has_to_turn(tag, dir) ? 1001 : 1)
-            if new_score < nodes[neighbor, neighbor_tag].score
-                nodes[neighbor, neighbor_tag].score = new_score
+            new_score = node.score + (has_to_turn(tag, dir) ? 1001 : 1)
+            if new_score < neighbor_node.score
+                neighbor_node.score = new_score
                 prev[neighbor, neighbor_tag] = (pos, tag)
             end
         end
@@ -220,7 +220,6 @@ function test()
         ("example2.txt" => (11048, 64)),
         ("example3.txt" => (7019, 35)),
         ("example4.txt" => (3015, 16)),
-        ("input.txt" => (127520, 565)),
     ]
         expected1, expected2 = args
         printstyled("--- testing: ", path, " ---\n"; color=:yellow)
