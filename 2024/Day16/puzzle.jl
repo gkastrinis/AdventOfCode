@@ -32,7 +32,6 @@ const SYMBOL_TO_COLOR = Dict(
 )
 
 function AoC_Utils.pretty_print(puzzle::Puzzle)
-    # return nothing
     pretty_print(puzzle.grid, false) do i, j
         ch = puzzle.grid[i, j]
         printstyled(ch, ' '; color=SYMBOL_TO_COLOR[ch])
@@ -58,6 +57,8 @@ function dir_to_tag(direction::Direction)
     return direction in (N, S) ? 'V' : 'H'
 end
 
+const TaggedPoint = Tuple{Point,Char}
+
 # Two nodes corresponding to the horizontal and vertical traversal of the grid cell.
 # Given a grid like this:
 # . X .
@@ -80,7 +81,7 @@ end
 # A is connected to X via the turn edge in H, and B is connected to Y via the turn edge in V.
 # Thus given a node, the out edges have score 1, the turn edges have score 1001.
 function create_graph(puzzle::Puzzle)
-    nodes = Dict{Tuple{Point,Char}, GridNode}()
+    nodes = Dict{TaggedPoint, GridNode}()
     rows, columns = size(puzzle.grid)
     # Inialize scores in each node to a large number (simulating infinity)
     max_score = rows * columns * 1000 * 1000
@@ -117,9 +118,9 @@ function create_graph(puzzle::Puzzle)
     return nodes
 end
 
-function shortest_path!(puzzle::Puzzle, nodes::Dict{Tuple{Point,Char},GridNode})
+function shortest_path!(puzzle::Puzzle, nodes::Dict{TaggedPoint,GridNode})
     visited = Set{Point}()
-    prev = Dict{Tuple{Point,Char},Tuple{Point,Char}}()
+    prev = Dict{TaggedPoint,TaggedPoint}()
     while true
         candidates = filter(k -> !(k[1] in visited), collect(keys(nodes)))
         isempty(candidates) && break
@@ -149,8 +150,7 @@ end
 ############################################################################################
 
 module Part1
-    using ..AoC_Utils: Direction, Point, N, S, E, W
-    using ..AoC_24_Day16: Puzzle, pretty_print, create_graph, dir_to_tag, has_to_turn, shortest_path!
+    using ..AoC_24_Day16: Puzzle, create_graph, shortest_path!
 
     function solve(puzzle::Puzzle)
         nodes = create_graph(puzzle)
@@ -162,8 +162,7 @@ end
 ############################################################################################
 
 module Part2
-    using ..AoC_Utils: Direction, Point, N, S, E, W
-    using ..AoC_24_Day16: Puzzle, pretty_print, create_graph, dir_to_tag, has_to_turn, shortest_path!
+    using ..AoC_24_Day16: Puzzle, TaggedPoint, create_graph, shortest_path!
 
     function solve(puzzle::Puzzle)
         nodes = create_graph(puzzle)
@@ -174,7 +173,7 @@ module Part2
         min_score = min(stopH.score, stopV.score)
         min_tag = stopH.score == min_score ? 'H' : 'V'
 
-        working_set = Set{Tuple{Point,Char}}()
+        working_set = Set{TaggedPoint}()
         if stopH.score == min_score
             push!(working_set, (puzzle.stop, 'H'))
         end
@@ -185,16 +184,13 @@ module Part2
         # Use prev from Dijkstra's algorithm to find the shortest path
         # Extend with alternative turns to discover all shortest paths
         while !isempty(working_set)
-            curr = pop!(working_set)
-            curr_pos, curr_tag = curr
-
+            curr_pos, curr_tag = pop!(working_set)
             puzzle.grid[curr_pos...] = '*'
 
             haskey(prev, (curr_pos, curr_tag)) || continue
             p, tag = prev[curr_pos, curr_tag]
             puzzle.grid[p...] = '*'
-            curr = (p, tag)
-            push!(working_set, curr)
+            push!(working_set, (p, tag))
 
             # If the previous node is on a turn, check if the node straight ahead of current
             # is also valid based on the score.
@@ -202,7 +198,8 @@ module Part2
                 diff = p - curr_pos
                 alt = curr_pos + diff + diff
                 alt_node = get(nodes, (alt, curr_tag), nothing)
-                (alt_node !== nothing && alt_node.score == nodes[curr_pos, curr_tag].score - 2) || continue
+                isnothing(alt_node) && continue
+                alt_node.score != nodes[curr_pos, curr_tag].score - 2 && continue
                 push!(working_set, (alt, curr_tag))
             end
         end
@@ -223,6 +220,7 @@ function test()
         ("example2.txt" => (11048, 64)),
         ("example3.txt" => (7019, 35)),
         ("example4.txt" => (3015, 16)),
+        ("input.txt" => (127520, 565)),
     ]
         expected1, expected2 = args
         printstyled("--- testing: ", path, " ---\n"; color=:yellow)

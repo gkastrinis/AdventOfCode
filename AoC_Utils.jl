@@ -99,12 +99,29 @@ function pretty_print(f::Function, m::Matrix{T}, interactive::Bool=true) where T
     return nothing
 end
 
-function in_bounds(matrix::Matrix{T}, point::Point) where T
-    return in_bounds(matrix, point[1], point[2])
+function in_bounds(grid::Matrix{T}, point::Point) where T
+    return in_bounds(grid, point[1], point[2])
 end
 
-function in_bounds(matrix::Matrix{T}, row::Int, column::Int) where T
-    return 1 <= row <= size(matrix, 1) && 1 <= column <= size(matrix, 2)
+function in_bounds(grid::Matrix{T}, row::Int, column::Int) where T
+    return 1 <= row <= size(grid, 1) && 1 <= column <= size(grid, 2)
+end
+
+function read_grid(f::Function, io::IO, rows::Int, columns::Int)
+    grid = Matrix{Char}(undef, rows, columns)
+    i = j = 1
+    while !eof(io)
+        ch = read(io, Char)
+        if ch == '\n'
+            i += 1
+            j = 1
+        else
+            grid[i, j] = ch
+            f(i, j, ch)
+            j += 1
+        end
+    end
+    return grid
 end
 
 end
