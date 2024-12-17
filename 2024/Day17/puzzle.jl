@@ -91,18 +91,22 @@ end
 
 const INSTRUCTIONS = [adv, bxl, bst, jnz, bxc, out, bdv, cdv]
 
+function run!(puzzle::Puzzle)
+    while puzzle.ip <= length(puzzle.program)
+        code = puzzle.program[puzzle.ip]
+        operand = puzzle.program[puzzle.ip + 1]
+        puzzle.ip = INSTRUCTIONS[code + 1](puzzle, puzzle.ip, operand)
+    end
+    return nothing
+end
+
 ############################################################################################
 
 module Part1
-    using ..AoC_24_Day17: Puzzle, INSTRUCTIONS
+    using ..AoC_24_Day17: Puzzle, run!
 
     function solve(puzzle::Puzzle)
-        program_len = length(puzzle.program)
-        while puzzle.ip <= program_len
-            code = puzzle.program[puzzle.ip]
-            operand = puzzle.program[puzzle.ip + 1]
-            puzzle.ip = INSTRUCTIONS[code + 1](puzzle, puzzle.ip, operand)
-        end
+        run!(puzzle)
         return join(puzzle.output, ',')
     end
 end
@@ -110,11 +114,53 @@ end
 ############################################################################################
 
 module Part2
-    using ..AoC_24_Day17: Puzzle
+    using ..AoC_24_Day17: Puzzle, run!
 
+    function reset!(puzzle::Puzzle, regA::Int, regB::Int, regC::Int)
+        puzzle.regA = regA
+        puzzle.regB = regB
+        puzzle.regC = regC
+        puzzle.ip = 1
+        empty!(puzzle.output)
+    end
+
+    # Input is right-shifting the value of register A by 3 bits until it's zero.
+    # Search trying to match the last output digit, trying 0-7 for values of register A.
+    # For each valid value, *left-shift* the value of register A by 3 bits and add it to the working set.
+    # The working set is a queue, in order to get the smallest solution first.
     function solve(puzzle::Puzzle)
+        regB, regC = puzzle.regB, puzzle.regC
+        target_output = puzzle.program
+        max_span = length(target_output)
+        # start x span
+        working_set = Vector{Tuple{Int,Int}}()
+        push!(working_set, (0, 1))
+        while !isempty(working_set)
+            (start, span) = pop!(working_set)
+            subtarget = @view target_output[end-span+1:end]
+            stop_candidates = next_octal_candidates!(puzzle, start, regB, regC, subtarget)
+
+            span == max_span && !isempty(stop_candidates) && return stop_candidates[1]
+
+            for stop in stop_candidates
+                pushfirst!(working_set, (stop << 3, span + 1))
+            end
+        end
+        printstyled("No solution found\n"; color=:red)
         return nothing
     end
+
+    function next_octal_candidates!(puzzle::Puzzle, start::Int, B::Int, C::Int, target::AbstractVector{UInt8})
+        candidates = Int[]
+        for i in start:start+7
+            reset!(puzzle, i, B, C)
+            run!(puzzle)
+            puzzle.output != target && continue
+            push!(candidates, i)
+        end
+        return candidates
+    end
+
 end
 
 ############################################################################################
@@ -127,6 +173,7 @@ solve_part2(path::String) = Part2.solve(Puzzle(@filedata path))
 function test()
     for (path, args) in [
         ("example1.txt" => ("4,6,3,5,6,3,5,2,1,0", nothing)),
+        ("example2.txt" => ("5,7,3,0", 117440)),
     ]
         expected1, expected2 = args
         printstyled("--- testing: ", path, " ---\n"; color=:yellow)
