@@ -9,7 +9,7 @@ mutable struct Puzzle
     regC::Int
     ip::Int
     program::Vector{UInt8}
-    output::IOBuffer
+    output::Vector{UInt8}
 end
 
 function Puzzle(input::String)
@@ -33,14 +33,7 @@ function Puzzle(input::String)
         # ,
         read(io, Char)
     end
-    return Puzzle(regA, regB, regC, 1, program, IOBuffer())
-end
-
-function run_instruction!(puzzle::Puzzle)
-    code = puzzle.program[puzzle.ip]
-    operand = puzzle.program[puzzle.ip + 1]
-    puzzle.ip = INSTRUCTIONS[code + 1](puzzle, puzzle.ip, operand)
-    return
+    return Puzzle(regA, regB, regC, 1, program, UInt8[])
 end
 
 function combo_operand(puzzle::Puzzle, operand::UInt8)
@@ -53,7 +46,7 @@ end
 
 function adv(puzzle::Puzzle, ip::Int, operand::UInt8)
     operand = combo_operand(puzzle, operand)
-    puzzle.regA = puzzle.regA ÷ (2^operand)
+    puzzle.regA = puzzle.regA >> operand
     return ip + 2
 end
 
@@ -80,19 +73,19 @@ end
 
 function out(puzzle::Puzzle, ip::Int, operand::UInt8)
     operand = combo_operand(puzzle, operand)
-    print(puzzle.output, (operand % 8), ',')
+    push!(puzzle.output, (operand % 8))
     return ip + 2
 end
 
 function bdv(puzzle::Puzzle, ip::Int, operand::UInt8)
     operand = combo_operand(puzzle, operand)
-    puzzle.regB = puzzle.regA ÷ (2^operand)
+    puzzle.regB = puzzle.regA >> operand
     return ip + 2
 end
 
 function cdv(puzzle::Puzzle, ip::Int, operand::UInt8)
     operand = combo_operand(puzzle, operand)
-    puzzle.regC = puzzle.regA ÷ (2^operand)
+    puzzle.regC = puzzle.regA >> operand
     return ip + 2
 end
 
@@ -101,15 +94,16 @@ const INSTRUCTIONS = [adv, bxl, bst, jnz, bxc, out, bdv, cdv]
 ############################################################################################
 
 module Part1
-    using ..AoC_24_Day17: Puzzle, run_instruction!
+    using ..AoC_24_Day17: Puzzle, INSTRUCTIONS
 
     function solve(puzzle::Puzzle)
         program_len = length(puzzle.program)
         while puzzle.ip <= program_len
-            run_instruction!(puzzle)
+            code = puzzle.program[puzzle.ip]
+            operand = puzzle.program[puzzle.ip + 1]
+            puzzle.ip = INSTRUCTIONS[code + 1](puzzle, puzzle.ip, operand)
         end
-        res = String(take!(puzzle.output))
-        return res[end] == ',' ? res[1:end-1] : res
+        return join(puzzle.output, ',')
     end
 end
 
