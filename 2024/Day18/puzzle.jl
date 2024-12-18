@@ -32,6 +32,8 @@ end
 
 const TO_COLOR = Dict('█' => :magenta, '#' => :magenta, '.' => :black, '*' => :yellow)
 
+############################################################################################
+
 function shortest_path!(grid::Matrix{Char}, start::Point, stop::Point)
     distances = Dict{Point,Int}()
     rows, columns = size(grid)
@@ -44,9 +46,10 @@ function shortest_path!(grid::Matrix{Char}, start::Point, stop::Point)
 
     visited = Set{Point}()
     previous = Dict{Point,Point}()
+    found = false
     while true
         candidates = filter(pos -> !(pos in visited), collect(keys(distances)))
-        isempty(candidates) && return (distances, previous, false)
+        isempty(candidates) && break
         # (position x distance)
         unvisited = map(k -> (k, distances[k]), candidates)
         # Sort by increasing distance
@@ -54,7 +57,10 @@ function shortest_path!(grid::Matrix{Char}, start::Point, stop::Point)
 
 
         pos, distance = pop!(unvisited)
-        pos == stop && return (distances, previous, distance != max_score)
+        if pos == stop
+            found = distance != max_score
+            break
+        end
         push!(visited, pos)
 
         for dir in (N, S, E, W)
@@ -69,18 +75,33 @@ function shortest_path!(grid::Matrix{Char}, start::Point, stop::Point)
             end
         end
     end
+
+    path = get_path(previous, stop)
+    return found, path, distances, previous
+end
+
+function get_path(previous::Dict{Point,Point}, stop::Point)
+    path = Vector{Point}()
+    working_set = Set{Point}([stop])
+    while !isempty(working_set)
+        current = pop!(working_set)
+        push!(path, current)
+        prev = get(previous, current, nothing)
+        isnothing(prev) && continue
+        push!(working_set, prev)
+    end
+    return path
 end
 
 ############################################################################################
 
 module Part1
-    using ..AoC_Utils: Point
-    using ..AoC_24_Day18: Puzzle, prepare_grid, shortest_path!, TO_COLOR
+    using ..AoC_24_Day18: Puzzle, prepare_grid, shortest_path!
 
     function solve(puzzle::Puzzle, size::Int, num_corruptions::Int)
         grid = prepare_grid(puzzle, size, num_corruptions)
         start, stop = (1, 1), (size, size)
-        distances, _, _ = shortest_path!(grid, start, stop)
+        _, _, distances, _ = shortest_path!(grid, start, stop)
         return distances[(size, size)]
     end
 end
@@ -88,6 +109,58 @@ end
 ############################################################################################
 
 module Part2
+    using ..AoC_Utils: Point,pretty_print
+    using ..AoC_24_Day18: Puzzle, prepare_grid, shortest_path!, TO_COLOR
+
+    function show(grid::Matrix{Char})
+        return nothing
+        pretty_print(grid, true) do i, j
+            ch = grid[i, j]
+            color = (ch == '𝕏' ? :red : TO_COLOR[ch])
+            printstyled(ch, ' '; color=color)
+        end
+    end
+
+    function solve(puzzle::Puzzle, rows::Int, num_corruptions::Int)
+        grid = prepare_grid(puzzle, rows, num_corruptions)
+        start, stop = (1, 1), (rows, rows)
+        _, path, _, _ = shortest_path!(grid, start, stop)
+
+        fill_path!(grid, path)
+        show(grid)
+
+        i = j = 0
+        next_index = num_corruptions + 1
+        last_index = length(puzzle.corruptions)
+        new_paths_counter = 0
+        while next_index <= last_index
+            i, j = puzzle.corruptions[next_index]
+            next = (i+1, j+1)
+            grid[next...] = '𝕏'
+            show(grid)
+            grid[next...] = '█'
+
+            if next in path
+                new_paths_counter += 1
+                found, path, _, _ = shortest_path!(grid, start, stop)
+                !found && break
+                fill_path!(grid, path)
+            end
+            next_index += 1
+        end
+        return "$j,$i"
+    end
+
+    function fill_path!(grid::Matrix{Char}, path::Vector{Point})
+        rows, columns = size(grid)
+        for i in 1:rows, j in 1:columns
+            grid[i, j] == '*' || continue
+            grid[i, j] = '.'
+        end
+        for point in path
+            grid[point...] = '*'
+        end
+    end
 end
 
 ############################################################################################
@@ -101,9 +174,11 @@ solve_part2(path::String, size::Int, num_corruptions::Int) =
 
 function test()
     for (path, args) in [
-        ("example1.txt", ((7, 12, 22), nothing)),
+        ("example1.txt", ((7, 12, 22), (7, 12, "6,1"))),
     ]
-        args1, expected2 = args
+        args1, arg2 = args
+        size, num_corruptions, expected1 = args1
+        size, num_corruptions, expected2 = arg2
         printstyled("--- testing: ", path, " ---\n"; color=:yellow)
         size, num_corruptions, expected1 = args1
         test_assert("Part 1", expected1, solve_part1(path, size, num_corruptions))
