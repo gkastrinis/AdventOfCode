@@ -34,28 +34,37 @@ const TO_COLOR = Dict('█' => :magenta, '#' => :magenta, '.' => :black, '*' => 
 
 ############################################################################################
 
+using DataStructures: MutableBinaryMinHeap, update!
+
+function Base.isless(p1::Tuple{Point, Int}, p2::Tuple{Point, Int})
+    return p1[2] < p2[2] || (p1[2] == p2[2] && p1[1] < p2[1])
+end
+
 function shortest_path!(grid::Matrix{Char}, start::Point, stop::Point)
-    distances = Dict{Point,Int}()
     rows, columns = size(grid)
     # Inialize scores in each node to a large number (simulating infinity)
     max_score = rows * columns * 1000
+
+    # Use a heap to store nodes and distances, to retrieve the min node each time
+    # Use a dict from node to heap handle to update the heap
+    # Use a dict from node to current min distance
+    unvisited = MutableBinaryMinHeap{Tuple{Point, Int}}()
+    distances = Dict{Point,Int}()
+    handles = Dict{Point,Int}()
+
     for i in 1:rows, j in 1:columns
         grid[i, j] == '█' && continue
-        distances[i, j] = ((i, j) == start ? 0 : max_score)
+        pos = (i, j)
+        dist = (pos == start ? 0 : max_score)
+        h = push!(unvisited, (pos, dist))
+        distances[pos] = dist
+        handles[pos] = h
     end
 
     visited = Set{Point}()
     previous = Dict{Point,Point}()
     found = false
     while true
-        candidates = filter(pos -> !(pos in visited), collect(keys(distances)))
-        isempty(candidates) && break
-        # (position x distance)
-        unvisited = map(k -> (k, distances[k]), candidates)
-        # Sort by increasing distance
-        sort!(unvisited; by = node -> node[2], rev = true)
-
-
         pos, distance = pop!(unvisited)
         if pos == stop
             found = distance != max_score
@@ -70,6 +79,8 @@ function shortest_path!(grid::Matrix{Char}, start::Point, stop::Point)
             isnothing(neighbor_distance) && continue
             new_distance = distance + 1
             if new_distance < neighbor_distance
+                handle = handles[neighbor]
+                update!(unvisited, handle, (neighbor, new_distance))
                 distances[neighbor] = new_distance
                 previous[neighbor] = pos
             end
@@ -180,7 +191,6 @@ function test()
         size, num_corruptions, expected1 = args1
         size, num_corruptions, expected2 = arg2
         printstyled("--- testing: ", path, " ---\n"; color=:yellow)
-        size, num_corruptions, expected1 = args1
         test_assert("Part 1", expected1, solve_part1(path, size, num_corruptions))
         test_assert("Part 2", expected2, solve_part2(path, size, num_corruptions))
     end
