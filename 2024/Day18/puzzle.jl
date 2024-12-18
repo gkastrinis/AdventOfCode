@@ -49,7 +49,6 @@ function shortest_path!(grid::Matrix{Char}, start::Point, stop::Point)
     # Use a dict from node to heap handle to update the heap
     # Use a dict from node to current min distance
     unvisited = MutableBinaryMinHeap{Tuple{Point, Int}}()
-    distances = Dict{Point,Int}()
     handles = Dict{Point,Int}()
 
     for i in 1:rows, j in 1:columns
@@ -57,17 +56,16 @@ function shortest_path!(grid::Matrix{Char}, start::Point, stop::Point)
         pos = (i, j)
         dist = (pos == start ? 0 : max_score)
         h = push!(unvisited, (pos, dist))
-        distances[pos] = dist
         handles[pos] = h
     end
 
     visited = Set{Point}()
     previous = Dict{Point,Point}()
-    found = false
+    path_score = max_score
     while true
         pos, distance = pop!(unvisited)
         if pos == stop
-            found = distance != max_score
+            path_score = distance
             break
         end
         push!(visited, pos)
@@ -75,20 +73,18 @@ function shortest_path!(grid::Matrix{Char}, start::Point, stop::Point)
         for dir in (N, S, E, W)
             neighbor = pos + dir
             neighbor in visited && continue
-            neighbor_distance = get(distances, neighbor, nothing)
-            isnothing(neighbor_distance) && continue
+            neighbor_handle = get(handles, neighbor, nothing)
+            isnothing(neighbor_handle) && continue
             new_distance = distance + 1
-            if new_distance < neighbor_distance
-                handle = handles[neighbor]
-                update!(unvisited, handle, (neighbor, new_distance))
-                distances[neighbor] = new_distance
+            if new_distance < unvisited[neighbor_handle][2]
+                update!(unvisited, neighbor_handle, (neighbor, new_distance))
                 previous[neighbor] = pos
             end
         end
     end
 
     path = get_path(previous, stop)
-    return found, path, distances, previous
+    return (path_score != max_score, path, path_score, previous)
 end
 
 function get_path(previous::Dict{Point,Point}, stop::Point)
@@ -112,8 +108,8 @@ module Part1
     function solve(puzzle::Puzzle, size::Int, num_corruptions::Int)
         grid = prepare_grid(puzzle, size, num_corruptions)
         start, stop = (1, 1), (size, size)
-        _, _, distances, _ = shortest_path!(grid, start, stop)
-        return distances[(size, size)]
+        _, _, path_score, _ = shortest_path!(grid, start, stop)
+        return path_score
     end
 end
 
