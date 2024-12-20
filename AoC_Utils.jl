@@ -87,6 +87,10 @@ Base.:+(p::Point, dir::Direction) = (p[1] + dir[1], p[2] + dir[2])
 Base.:-(p::Point, dir::Direction) = (p[1] - dir[1], p[2] - dir[2])
 Base.:*(p::Point, times::Int) = (p[1] * times, p[2] * times)
 
+function manhattan_distance(p1::Point, p2::Point)
+    return abs(p1[1] - p2[1]) + abs(p1[2] - p2[2])
+end
+
 function pretty_print(f::Function, m::Matrix{T}, interactive::Bool=true) where T
     interactive && (sleep(0.1); Base.run(`clear`))
     println("\n")
