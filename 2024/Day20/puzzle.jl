@@ -2,8 +2,7 @@ module AoC_24_Day20
 
 include("../../AoC_Utils.jl")
 import .AoC_Utils: pretty_print
-using .AoC_Utils: Point, N, S, E, W
-using .AoC_Utils: read_grid, in_bounds
+using .AoC_Utils: Point, N, S, E, W, read_grid
 
 struct Puzzle
     grid::Matrix{Char}
@@ -51,7 +50,7 @@ function collect_path(grid::Matrix{Char}, start::Point, stop::Point)
         i += 1
         for dir in (N, S, E, W)
             next = current + dir
-            in_bounds(grid, next) || continue
+            in_racetrack(grid, next) || continue
             grid[next...] != '#' || continue
             !haskey(path_indexes, next) || continue
             current = next
@@ -63,77 +62,78 @@ function collect_path(grid::Matrix{Char}, start::Point, stop::Point)
     return path, path_indexes
 end
 
-mutable struct CheatInfo
-    grid::Matrix{Char}
-    path::Vector{Point}
-    path_indexes::Dict{Point,Int}
-    threshold::Int
-    cheats::Set{Tuple{Point,Point}}
-end
-
-function attempt_to_cheat(ci::CheatInfo, origin::Point, n_cheats::Int)
-    for dir in (N, S, E, W)
-        neighbor = origin + dir
-        in_bounds(ci.grid, neighbor) || continue
-        ci.grid[neighbor...] == '#' || continue
-        # Only start cheating if at a wall
-        cheat(ci, origin, neighbor, n_cheats - 1)
-    end
-end
-
-function cheat(ci::CheatInfo, origin::Point, position::Point, n_cheats::Int)
-    # printstyled(origin, " -> ", position, " ", n_cheats, "\n"; color=:red)
-    if n_cheats == 0
-        # Shouldn't end on a wall
-        ci.grid[position...] == '#' && return
-        # Shouldn't end on the origin
-        position == origin && return
-        # Should end at a point already in the path
-        haskey(ci.path_indexes, position) || return
-        # Cheating should only improve the path
-        saves = ci.path_indexes[origin] - ci.path_indexes[position] - 2
-        saves >= ci.threshold || return
-        # Avoid duplicates
-        pair = (origin > position ? (origin, position) : (position, origin))
-        # printstyled(pair; color=:red)
-        push!(ci.cheats, pair)
-        return
-    end
-
-    for dir1 in (N, S, E, W)
-        neighbor = position + dir1
-        in_bounds(ci.grid, neighbor) || continue
-        cheat(ci, origin, neighbor, n_cheats - 1)
-    end
-end
-
-function debug_cheats(puzzle::Puzzle, cheats::Set{Tuple{Point,Point}})
-    for pair in cheats
-        a, b = puzzle.grid[pair[1]...], puzzle.grid[pair[2]...]
-        puzzle.grid[pair[1]...] = 'X'
-        puzzle.grid[pair[2]...] = 'X'
-        pretty_print(puzzle)
-        puzzle.grid[pair[1]...] = a
-        puzzle.grid[pair[2]...] = b
-    end
+function in_racetrack(grid::Matrix{Char}, point::Point)
+    row, col = point
+    return 1 < row < size(grid, 1) && 1 < col < size(grid, 2)
 end
 
 ############################################################################################
 
 module Part1
-    using ..AoC_Utils: Point
-    using ..AoC_24_Day20: Puzzle, CheatInfo
-    using ..AoC_24_Day20: pretty_print, collect_path, attempt_to_cheat, debug_cheats
+    using ..AoC_Utils: Point, N, S, E, W
+    using ..AoC_24_Day20: Puzzle, pretty_print, collect_path, in_racetrack
+
+    mutable struct CheatInfo
+        grid::Matrix{Char}
+        path::Vector{Point}
+        path_indexes::Dict{Point,Int}
+        threshold::Int
+        cheats::Set{Tuple{Point,Point}}
+    end
 
     function solve(puzzle::Puzzle, n_cheats::Int, threshold::Int)
         path, path_indexes = collect_path(puzzle.grid, puzzle.start, puzzle.stop)
-        # pretty_print(puzzle)
         ci = CheatInfo(puzzle.grid, path, path_indexes, threshold, Set{Tuple{Point,Point}}())
         for p in path
             attempt_to_cheat(ci, p, n_cheats)
         end
         # debug_cheats(puzzle, ci.cheats)
         return length(ci.cheats)
+    end
+
+    function attempt_to_cheat(ci::CheatInfo, origin::Point, n_cheats::Int)
+        for dir in (N, S, E, W)
+            neighbor = origin + dir
+            in_racetrack(ci.grid, neighbor) || continue
+            ci.grid[neighbor...] == '#' || continue
+            # Only start cheating if at a wall
+            cheat(ci, origin, neighbor, n_cheats - 1)
+        end
+    end
+
+    function cheat(ci::CheatInfo, origin::Point, position::Point, n_cheats::Int)
+        if n_cheats == 0
+            # Shouldn't end on a wall
+            ci.grid[position...] == '#' && return
+            # Shouldn't end on the origin
+            position == origin && return
+            # Should end at a point already in the path
+            haskey(ci.path_indexes, position) || return
+            # Cheating should only improve the path
+            saves = ci.path_indexes[origin] - ci.path_indexes[position] - 2
+            saves >= ci.threshold || return
+            # Avoid duplicates
+            pair = (origin > position ? (origin, position) : (position, origin))
+            push!(ci.cheats, pair)
+            return
+        end
+
+        for dir1 in (N, S, E, W)
+            neighbor = position + dir1
+            in_racetrack(ci.grid, neighbor) || continue
+            cheat(ci, origin, neighbor, n_cheats - 1)
+        end
+    end
+
+    function debug_cheats(puzzle::Puzzle, cheats::Set{Tuple{Point,Point}})
+        for pair in cheats
+            a, b = puzzle.grid[pair[1]...], puzzle.grid[pair[2]...]
+            puzzle.grid[pair[1]...] = 'X'
+            puzzle.grid[pair[2]...] = 'X'
+            pretty_print(puzzle)
+            puzzle.grid[pair[1]...] = a
+            puzzle.grid[pair[2]...] = b
+        end
     end
 end
 
