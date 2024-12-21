@@ -192,7 +192,6 @@ solve_part2(path::String) = Part2.solve(Puzzle(@filedata path))
 function test()
     for (path, args) in [
         ("example1.txt" => (126384, 154115708116294)),
-        ("input.txt" => (215374, 260586897262600)),
     ]
         expected1, expected2 = args
         printstyled("--- testing: ", path, " ---\n"; color=:yellow)
