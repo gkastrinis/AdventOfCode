@@ -88,20 +88,24 @@ module Part2
     const ROBOT_BUTTONS_KEYS = ('A', '^', '<', 'v', '>')
     const DOOR_BUTTONS_KEYS = ('7', '8', '9', '4', '5', '6', '1', '2', '3', '0', 'A')
 
-    # A human is pressing buttons on a robot (KeyPad1). This is free.
-    # Then the robot is pressing buttons on another robot (KeyPad2).
-    # If we want the first robot to go from "A" to "v" on KeyPad2, we have to press "v<A" on KeyPad1.
-    # For all possible button combinations we compute the best such sequence. This is "basic_sequences".
-    # We also compute the cost of each such sequence. In "v<A", the cost is 3.
-    # We compute the costs for all possible combinations of buttons in "costs1".
+    # A human is pressing buttons on the keypad of the first robot. KeyPad0.
+    # Any action here has a cost of 1.
+    # Assume that KeyPad1 is the first robot-controlled keypad.
+    # If the robot on KeyPad1, is on "A" and we want to move it to "v", one of the shortest
+    # sequences is "v<A". The cost is 3.
+    # We compute every possible combination of start/stop buttons on KeyPad1.
+    # The costs are stored in "costs1", and the sequences needed in "basic_sequences".
     #
-    # Then we use dynamic programming to compute the costs for all possible button combinations
-    # from one keypad to the next. We always start and end at a "A".
-    # So for "v<A", we find the cost of "A to v" + "v to <" + "< to A".
+    # If we are now on KeyPad2 (the second robot-controlled keypad), and want to move from
+    # "A" to "v", we have to press "v<A" on KeyPad1. The corresponding cost is that of
+    # "A to v" + "v to <" + "< to A" (since we always start and end at "A").
+    # We compute every possible combination of start/stop buttons on KeyPad2.
+    # The costs are stored in "costs2".
     #
-    # If we want to press "1A" on the numpad, with 25 robots in between,
-    # we compute "costs" 25 times in a row, and then use those costs for the sequence
-    # "^<<A>>vA" that corresponds to "A to 1" + "1 to A".
+    # We only need the to actually keep the costs being computed, and those of the previous level.
+    # After doing that for 25 robots, we apply the same logic on the keypad on the door to find the
+    # final cost. For instance, in order to press "1A" on the door, we need to compute the costs of
+    # "A to 1" + "1 to A" using the costs of the last level.
     function solve(puzzle::Puzzle)
         basic_sequences, costs1 = initial_costs(ROBOT_BUTTONS)
         current = costs1
@@ -188,6 +192,7 @@ solve_part2(path::String) = Part2.solve(Puzzle(@filedata path))
 function test()
     for (path, args) in [
         ("example1.txt" => (126384, 154115708116294)),
+        ("input.txt" => (215374, 260586897262600)),
     ]
         expected1, expected2 = args
         printstyled("--- testing: ", path, " ---\n"; color=:yellow)
