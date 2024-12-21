@@ -102,7 +102,7 @@ module Part2
     # We compute every possible combination of start/stop buttons on KeyPad2.
     # The costs are stored in "costs2".
     #
-    # We only need the to actually keep the costs being computed, and those of the previous level.
+    # We only need to actually keep the costs being computed, and those of the previous level.
     # After doing that for 25 robots, we apply the same logic on the keypad on the door to find the
     # final cost. For instance, in order to press "1A" on the door, we need to compute the costs of
     # "A to 1" + "1 to A" using the costs of the last level.
