@@ -106,6 +106,21 @@ module Part2
     # After doing that for 25 robots, we apply the same logic on the keypad on the door to find the
     # final cost. For instance, in order to press "1A" on the door, we need to compute the costs of
     # "A to 1" + "1 to A" using the costs of the last level.
+    #
+    #     +---+---+            +---+---+            +---+---+
+    #     | ^ | A |            | ^ | A |            | ^ | A |
+    # +---+---+---+        +---+---+---+        +---+---+---+
+    # | < | v | > |        | < | v | > |        | < | v | > |
+    # +---+---+---+        +---+---+---+        +---+---+---+
+
+    # KP0                  KP1                  KP2
+    # human                bot1                 bot2
+    # controlling bot1     controlling bot2     controlling bot3
+
+    #                      starts from A
+    #                      wants to move to v
+    # we press v<A
+    #                                           emits v
     function solve(puzzle::Puzzle)
         basic_sequences, costs1 = initial_costs(ROBOT_BUTTONS)
         current = costs1
