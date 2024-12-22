@@ -23,14 +23,15 @@ module Part1
     using ..AoC_24_Day22: Puzzle, monkey_rand
 
     function solve(puzzle::Puzzle, loops::Int)
-        return sum(monkey_loop(seed, loops) for seed in puzzle.seeds)
-    end
-
-    function monkey_loop(seed::Int, loops::Int)
-        for _ in 1:loops
-            seed = monkey_rand(seed)
+        score = 0
+        for seed in puzzle.seeds
+            secret = seed
+            for _ in 1:loops
+                secret = monkey_rand(secret)
+            end
+            score += secret
         end
-        return seed
+        return score
     end
 end
 
