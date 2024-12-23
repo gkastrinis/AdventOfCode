@@ -1,0 +1,10 @@
+ta-aa
+ta-bb
+ta-cc
+ta-dd
+aa-zz
+bb-cc
+dd-bb
+dd-cc
+tz-zz
+zz-ta
