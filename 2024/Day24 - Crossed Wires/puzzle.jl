@@ -172,24 +172,22 @@ module Part2
         and_xor_gates = union(and_gates, xor_gates)
         for gate in and_xor_gates
             # Gates with inputs from X and Y are valid.
-            gate.in1[1] in ('x', 'y') && gate.in2[1] in ('x', 'y') && continue
+            inputs_xs_and_ys(gate) && continue
             # Otherwise, one input should be from XOR and the other from OR.
             in_gate1 = puzzle.out_wire_to_gate[gate.in1]
             in_gate2 = puzzle.out_wire_to_gate[gate.in2]
-            match_gate_kinds(in_gate1, in_gate2, 'X', 'O') && continue
+            have_gate_kinds(in_gate1, in_gate2, 'X', 'O') && continue
             # The first bits don't have a previous carry, so an AND gate with x00 and y00 is valid.
-            if match_gate_kinds(in_gate1, in_gate2, 'X', 'A')
+            if have_gate_kinds(in_gate1, in_gate2, 'X', 'A')
                 input_and_gate = (in_gate1.kind == 'A' ? in_gate1 : in_gate2)
                 if input_and_gate.in1 == "x00" && input_and_gate.in2 == "y00" ||
                     input_and_gate.in1 == "y00" && input_and_gate.in2 == "x00"
                     continue
                 end
             end
-
             # If both inputs are XOR, the invalid one is that not using Xs and Ys
-            if match_gate_kinds(in_gate1, in_gate2, 'X', 'X')
-                if in_gate1.in1[1] == 'x' && in_gate1.in2[1] == 'y' ||
-                    in_gate1.in1[1] == 'y' && in_gate1.in2[1] == 'x'
+            if have_gate_kinds(in_gate1, in_gate2, 'X', 'X')
+                if inputs_xs_and_ys(in_gate1)
                     push!(wrong_wires, in_gate2.out)
                 else
                     push!(wrong_wires, in_gate1.out)
@@ -207,7 +205,7 @@ module Part2
             # OR gates should have inputs from AND.
             in_gate1 = puzzle.out_wire_to_gate[gate.in1]
             in_gate2 = puzzle.out_wire_to_gate[gate.in2]
-            match_gate_kinds(in_gate1, in_gate2, 'A', 'A') && continue
+            have_gate_kinds(in_gate1, in_gate2, 'A', 'A') && continue
             in_gate1.kind != 'A' && push!(wrong_wires, in_gate1.out)
             in_gate2.kind != 'A' && push!(wrong_wires, in_gate2.out)
         end
@@ -227,9 +225,14 @@ module Part2
         print(io, gate.in1, "  ", op, "  ", gate.in2, " -> ", gate.out)
     end
 
-    function match_gate_kinds(gate1::Gate, gate2::Gate, expected1::Char, expected2::Char)
+    function have_gate_kinds(gate1::Gate, gate2::Gate, expected1::Char, expected2::Char)
         return gate1.kind == expected1 && gate2.kind == expected2 ||
             gate1.kind == expected2 && gate2.kind == expected1
+    end
+
+    function inputs_xs_and_ys(gate::Gate)
+        return gate.in1[1] == 'x' && gate.in2[1] == 'y' ||
+            gate.in1[1] == 'y' && gate.in2[1] == 'x'
     end
 end
 
