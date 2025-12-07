@@ -1,8 +1,8 @@
 use std::io::{self, BufRead};
 
-const START: i64 = ('S' as u8) as i64;
-const SPACE: i64 = ('.' as u8) as i64;
-const SPLIT: i64 = ('^' as u8) as i64;
+const START: i64 = 'S' as i64;
+const SPACE: i64 = '.' as i64;
+const SPLIT: i64 = '^' as i64;
 
 fn main() {
     let mut lines: Vec<Vec<i64>> = io::stdin()
@@ -11,7 +11,7 @@ fn main() {
         .map(|l| l
             .unwrap()
             .chars()
-            .map(|c| (c as u8) as i64)
+            .map(|c| c as i64)
             .collect()
         )
         .collect();
