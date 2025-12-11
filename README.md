@@ -1,4 +1,4 @@
-[Advent of Code 2025](https://adventofcode.com/2025) (16/24)
+[Advent of Code 2025](https://adventofcode.com/2025) (19/24)
 
 [Advent of Code 2024](https://adventofcode.com/2024) (50/50)
 
